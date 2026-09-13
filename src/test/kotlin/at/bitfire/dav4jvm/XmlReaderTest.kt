@@ -16,7 +16,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.xmlpull.v1.XmlPullParser
 import java.io.StringReader
-import java.time.Instant
+import kotlin.time.Instant
 
 class XmlReaderTest {
 
@@ -133,11 +133,11 @@ class XmlReaderTest {
         parser.next()       // now on START_TAG <test>
         val reader = XmlReader(parser)
 
-        assertEquals(Instant.ofEpochSecond(784111777), reader.readHttpDate())
+        assertEquals(Instant.fromEpochSeconds(784111777), reader.readHttpDate())
         assertEquals(XmlPullParser.END_TAG, parser.eventType)
         parser.next()
 
-        assertEquals(Instant.ofEpochSecond(784111777), reader.readHttpDate())
+        assertEquals(Instant.fromEpochSeconds(784111777), reader.readHttpDate())
         assertEquals(XmlPullParser.END_TAG, parser.eventType)
         parser.next()
 

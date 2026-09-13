@@ -14,41 +14,26 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
-import java.util.Calendar
-import java.util.TimeZone
+import kotlin.time.Instant
 
 class HttpUtilsTest {
 
     @Test
     fun formatDate() {
-        val cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"))
-        cal.set(2023, 4, 11, 17, 26, 35)
-        cal.timeZone = TimeZone.getTimeZone("UTC")
-        assertEquals("Sun, 06 Nov 1994 08:49:37 GMT", HttpUtils.formatDate(
-            ZonedDateTime.of(
-                LocalDate.of(1994, 11, 6),
-                LocalTime.of(8, 49, 37),
-                ZoneOffset.UTC
-            ).toInstant()
-        ))
+        assertEquals("Sun, 06 Nov 1994 08:49:37 GMT", HttpUtils.formatDate(Instant.parse("1994-11-06T08:49:37Z")))
     }
 
 
     @Test
     fun formatDate_timezone_is_GMT() {
         // See https://github.com/bitfireAT/dav4jvm/issues/22
-        assertTrue(HttpUtils.formatDate(Instant.EPOCH).endsWith(" GMT"))
+        assertTrue(HttpUtils.formatDate(Instant.fromEpochSeconds(0)).endsWith(" GMT"))
     }
 
     @Test
     fun parseDate_IMF_FixDate() {
         // RFC 7231 IMF-fixdate (preferred format)
-        assertEquals(Instant.ofEpochSecond(784111777), HttpUtils.parseDate("Sun, 06 Nov 1994 08:49:37 GMT"))
+        assertEquals(Instant.fromEpochSeconds(784111777), HttpUtils.parseDate("Sun, 06 Nov 1994 08:49:37 GMT"))
     }
 
     @Test

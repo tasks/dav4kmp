@@ -15,7 +15,9 @@ import at.bitfire.dav4jvm.ktor.exception.ServiceUnavailableException.Companion.D
 import at.bitfire.dav4jvm.ktor.exception.ServiceUnavailableException.Companion.DELAY_UNTIL_MAX
 import at.bitfire.dav4jvm.ktor.exception.ServiceUnavailableException.Companion.DELAY_UNTIL_MIN
 import io.ktor.http.HttpStatusCode
-import java.time.Instant
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 
 class ServiceUnavailableException internal constructor(
     responseInfo: HttpResponseInfo,
@@ -49,7 +51,7 @@ class ServiceUnavailableException internal constructor(
     private fun parseAsSeconds(retryAfter: String): Instant? {
         return try {
             val seconds = retryAfter.toLong()
-            Instant.now().plusSeconds(seconds)
+            Clock.System.now() + seconds.seconds
         } catch (_: NumberFormatException) {
             null
         }
@@ -66,14 +68,14 @@ class ServiceUnavailableException internal constructor(
      *
      * @return until when to wait before sync can be retried
      */
-    fun getDelayUntil(start: Instant = Instant.now()): Instant {
+    fun getDelayUntil(start: Instant = Clock.System.now()): Instant {
         if (retryAfterAbs == null)
-            return start.plusSeconds(DELAY_UNTIL_DEFAULT)
+            return start + DELAY_UNTIL_DEFAULT.seconds
 
         // take server suggestion, but restrict to plausible min/max values
         return retryAfterAbs.coerceIn(
-            minimumValue = start.plusSeconds(DELAY_UNTIL_MIN),
-            maximumValue = start.plusSeconds(DELAY_UNTIL_MAX)
+            minimumValue = start + DELAY_UNTIL_MIN.seconds,
+            maximumValue = start + DELAY_UNTIL_MAX.seconds
         )
     }
 

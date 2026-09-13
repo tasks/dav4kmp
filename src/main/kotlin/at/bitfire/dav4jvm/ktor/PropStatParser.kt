@@ -15,7 +15,6 @@ import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.property.webdav.WebDAV
 import io.ktor.http.HttpStatusCode
 import org.xmlpull.v1.XmlPullParser
-import java.util.LinkedList
 
 object PropStatParser {
 
@@ -31,7 +30,7 @@ object PropStatParser {
         val depth = parser.depth
 
         var status: HttpStatusCode? = null
-        val prop = LinkedList<Property>()
+        val prop = ArrayList<Property>()
 
         var eventType = parser.eventType
         while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {

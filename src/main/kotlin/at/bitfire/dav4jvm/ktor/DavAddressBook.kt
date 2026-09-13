@@ -39,7 +39,7 @@ class DavAddressBook(
      *
      * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable; see [location])
      *
-     * @throws java.io.IOException on I/O error
+     * @throws kotlinx.io.IOException on I/O error
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error
      * @throws at.bitfire.dav4jvm.ktor.exception.DavException on WebDAV error
      */
@@ -87,7 +87,7 @@ class DavAddressBook(
      *
      * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable; see [location])
      *
-     * @throws java.io.IOException on I/O error
+     * @throws kotlinx.io.IOException on I/O error
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error
      * @throws at.bitfire.dav4jvm.ktor.exception.DavException on WebDAV error
      */

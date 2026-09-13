@@ -63,10 +63,8 @@ tasks.withType<DokkaTask>().configureEach {
 dependencies {
     api(libs.kotlin.coroutines.core)
     api(libs.ktor.client.core)
-    api(libs.spotbugs.annotations)
     api(libs.xpp3)
 
-    implementation(libs.guava)
     implementation(libs.ktor.client.auth)
     implementation(libs.ktor.client.encoding)
 

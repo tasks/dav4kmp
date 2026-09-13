@@ -29,7 +29,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.time.Instant
+import kotlin.time.Instant
 
 class DavCalendarTest {
 
@@ -54,8 +54,8 @@ class DavCalendarTest {
         val engine = minimalMultiStatus()
         davCalendar(engine).calendarQuery(
             "VEVENT",
-            start = Instant.ofEpochSecond(784111777),
-            end = Instant.ofEpochSecond(1689324577)
+            start = Instant.fromEpochSeconds(784111777),
+            end = Instant.fromEpochSeconds(1689324577)
         ).toList()
         assertEquals(
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +

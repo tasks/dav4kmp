@@ -17,7 +17,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.time.Instant
+import kotlin.time.Instant
 
 class WebPushTest : PropertyTest() {
 
@@ -37,7 +37,7 @@ class WebPushTest : PropertyTest() {
                     "</push-register>"
         )
         val result = results.first() as PushRegister
-        assertEquals(Instant.ofEpochSecond(1703066611), result.expires)
+        assertEquals(Instant.fromEpochSeconds(1703066611), result.expires)
         val subscription = result.subscription?.webPushSubscription
         assertEquals("https://up.example.net/yohd4yai5Phiz1wi", subscription?.pushResource?.uri?.toString())
         assertEquals(ContentEncoding.AES128GCM, subscription?.contentEncoding?.encoding)
@@ -49,6 +49,23 @@ class WebPushTest : PropertyTest() {
             "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4",
             publicKey?.key
         )
+    }
+
+    @Test
+    fun testPushRegister_pushResourceNotAbsolute() {
+        for (value in listOf("push/abc", "/push/abc", "urn:x-push:abc", "")) {
+            val results = parseProperty(
+                "<push-register xmlns=\"$NS_WEBDAV_PUSH\">" +
+                        "  <subscription>" +
+                        "    <web-push-subscription>" +
+                        "      <push-resource>$value</push-resource>" +
+                        "    </web-push-subscription>" +
+                        "  </subscription>" +
+                        "</push-register>"
+            )
+            val subscription = (results.first() as PushRegister).subscription?.webPushSubscription
+            assertEquals(PushResource(null), subscription?.pushResource)
+        }
     }
 
     @Test

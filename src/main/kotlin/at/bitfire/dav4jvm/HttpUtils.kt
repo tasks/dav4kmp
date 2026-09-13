@@ -13,8 +13,8 @@ package at.bitfire.dav4jvm
 import io.ktor.http.fromHttpToGmtDate
 import io.ktor.http.toHttpDate
 import io.ktor.util.date.GMTDate
-import java.time.Instant
 import java.util.logging.Logger
+import kotlin.time.Instant
 
 object HttpUtils {
 
@@ -28,7 +28,7 @@ object HttpUtils {
      * @return date in HTTP-date format
      */
     fun formatDate(date: Instant): String =
-        GMTDate(date.toEpochMilli()).toHttpDate()
+        GMTDate(date.toEpochMilliseconds()).toHttpDate()
 
     /**
      * Parses an HTTP-date according to RFC 7231 section 7.1.1.1.
@@ -43,7 +43,7 @@ object HttpUtils {
      */
     fun parseDate(dateStr: String): Instant? = try {
         val ts = dateStr.fromHttpToGmtDate().timestamp
-        Instant.ofEpochMilli(ts)
+        Instant.fromEpochMilliseconds(ts)
     } catch (_: Exception) {
         logger.warning("Couldn't parse HTTP date: $dateStr, ignoring")
         null

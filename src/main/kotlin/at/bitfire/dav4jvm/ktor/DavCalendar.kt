@@ -25,14 +25,11 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.Url
 import io.ktor.http.contentType
+import io.ktor.util.date.GMTDate
 import kotlinx.coroutines.flow.Flow
 import java.io.StringWriter
-import java.time.Instant
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 import java.util.logging.Logger
+import kotlin.time.Instant
 
 @Suppress("unused")
 class DavCalendar(
@@ -51,7 +48,7 @@ class DavCalendar(
      *
      * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable; see [location])
      *
-     * @throws java.io.IOException on I/O error
+     * @throws kotlinx.io.IOException on I/O error
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error
      * @throws at.bitfire.dav4jvm.ktor.exception.DavException on WebDAV error
      */
@@ -91,13 +88,9 @@ class DavCalendar(
                         if (start != null || end != null) {
                             insertTag(CalDAV.TimeRange) {
                                 if (start != null)
-                                    attribute(null, TIME_RANGE_START, timeFormatUTC.format(
-                                        ZonedDateTime.ofInstant(start, ZoneOffset.UTC)
-                                    ))
+                                    attribute(null, TIME_RANGE_START, formatUtc(start))
                                 if (end != null)
-                                    attribute(null, TIME_RANGE_END, timeFormatUTC.format(
-                                        ZonedDateTime.ofInstant(end, ZoneOffset.UTC)
-                                    ))
+                                    attribute(null, TIME_RANGE_END, formatUtc(end))
                             }
                         }
                     }
@@ -130,7 +123,7 @@ class DavCalendar(
      *
      * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable; see [location])
      *
-     * @throws java.io.IOException on I/O error
+     * @throws kotlinx.io.IOException on I/O error
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error
      * @throws at.bitfire.dav4jvm.ktor.exception.DavException on WebDAV error
      */
@@ -189,7 +182,12 @@ class DavCalendar(
         const val TIME_RANGE_START = "start"
         const val TIME_RANGE_END = "end"
 
-        private val timeFormatUTC = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmssVV", Locale.US)
+        internal fun formatUtc(instant: Instant): String {
+            val date = GMTDate(instant.toEpochMilliseconds())
+            fun Int.pad(length: Int) = toString().padStart(length, '0')
+            return date.year.pad(4) + (date.month.ordinal + 1).pad(2) + date.dayOfMonth.pad(2) +
+                    "T" + date.hours.pad(2) + date.minutes.pad(2) + date.seconds.pad(2) + "Z"
+        }
 
     }
 

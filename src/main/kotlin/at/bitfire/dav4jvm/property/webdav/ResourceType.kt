@@ -52,7 +52,6 @@ class ResourceType(
                 }
                 eventType = parser.next()
             }
-            assert(parser.depth == depth)
 
             return ResourceType(types)
         }

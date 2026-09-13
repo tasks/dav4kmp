@@ -16,7 +16,6 @@ import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 import java.util.logging.Level
 import java.util.logging.Logger
-import java.util.regex.Pattern
 
 data class CalendarColor(
     val color: Int?
@@ -24,7 +23,7 @@ data class CalendarColor(
 
     companion object {
 
-        private val PATTERN = Pattern.compile("#?(\\p{XDigit}{6})(\\p{XDigit}{2})?")!!
+        private val PATTERN = Regex("#?([0-9a-fA-F]{6})([0-9a-fA-F]{2})?")
 
         /**
          * Converts a WebDAV color from one of these formats:
@@ -36,10 +35,10 @@ data class CalendarColor(
          */
         @Throws(IllegalArgumentException::class)
         fun parseARGBColor(davColor: String): Int {
-            val m = PATTERN.matcher(davColor)
-            if (m.find()) {
-                val color_rgb = Integer.parseInt(m.group(1), 16)
-                val color_alpha = m.group(2)?.let { Integer.parseInt(m.group(2), 16) and 0xFF } ?: 0xFF
+            val m = PATTERN.find(davColor)
+            if (m != null) {
+                val color_rgb = m.groupValues[1].toInt(16)
+                val color_alpha = m.groups[2]?.value?.let { it.toInt(16) and 0xFF } ?: 0xFF
                 return (color_alpha shl 24) or color_rgb
             } else
                 throw IllegalArgumentException("Couldn't parse color value: $davColor")

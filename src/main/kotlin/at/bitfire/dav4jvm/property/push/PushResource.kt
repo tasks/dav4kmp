@@ -13,17 +13,21 @@ package at.bitfire.dav4jvm.property.push
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlReader
+import io.ktor.http.Url
+import io.ktor.http.parseUrl
 import org.xmlpull.v1.XmlPullParser
-import java.net.URI
-import java.net.URISyntaxException
 
 /**
  * Represents a [NS_WEBDAV_PUSH]`:push-resource` property.
  *
  * Experimental! See https://github.com/bitfireAT/webdav-push/
+ *
+ * @property uri    absolute URL of the push resource; `null` if the element didn't contain one
+ *                  (a push resource is always an absolute URL, so relative references and
+ *                  opaque URIs are not silently resolved against a default host)
  */
 data class PushResource(
-    val uri: URI? = null
+    val uri: Url? = null
 ): Property {
 
     object Factory: PropertyFactory {
@@ -32,13 +36,7 @@ data class PushResource(
 
         override fun create(parser: XmlPullParser): PushResource =
             PushResource(
-                uri = XmlReader(parser).readText()?.let { uri ->
-                    try {
-                        URI(uri)
-                    } catch (_: URISyntaxException) {
-                        null
-                    }
-                }
+                uri = XmlReader(parser).readText()?.let { parseUrl(it) }
             )
 
     }

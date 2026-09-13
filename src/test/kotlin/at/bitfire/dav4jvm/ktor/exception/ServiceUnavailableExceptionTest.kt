@@ -25,7 +25,9 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.time.Instant
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 
 class ServiceUnavailableExceptionTest {
 
@@ -62,7 +64,7 @@ class ServiceUnavailableExceptionTest {
 
     @Test
     fun testRetryAfter_Date() = runTest {
-        val after30min = Instant.now().plusSeconds(30*60)
+        val after30min = Clock.System.now() + (30*60).seconds
         val mockEngine = MockEngine {
             respondError(
                 status = HttpStatusCode.ServiceUnavailable,  // 503
@@ -81,10 +83,6 @@ class ServiceUnavailableExceptionTest {
     // helpers
 
     private fun withinTimeRange(d: Instant, seconds: Long) =
-        d.isBefore(
-        Instant.now()
-            .plusSeconds(seconds)
-            .plusSeconds(5)     // tolerance for test running
-        )
+        d < Clock.System.now() + seconds.seconds + 5.seconds
 
 }

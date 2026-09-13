@@ -38,6 +38,8 @@ class UrlUtilsTest {
         assertEquals("127.0.0.1", UrlUtils.hostToDomain("127.0.0.1."))
         assertEquals("2001:db8::1", UrlUtils.hostToDomain("2001:db8::1"))
         assertEquals("[2001:db8::1]", UrlUtils.hostToDomain("[2001:db8::1]"))
+        assertEquals("::ffff:192.0.2.128", UrlUtils.hostToDomain("::ffff:192.0.2.128"))
+        assertEquals("[::ffff:192.0.2.128]", UrlUtils.hostToDomain("[::ffff:192.0.2.128]"))
     }
 
     @Test

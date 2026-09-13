@@ -56,8 +56,8 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.io.bytestring.encodeToByteString
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
-import java.io.EOFException
-import java.io.IOException
+import kotlinx.io.EOFException
+import kotlinx.io.IOException
 import java.io.StringWriter
 import java.util.logging.Level
 import java.util.logging.Logger

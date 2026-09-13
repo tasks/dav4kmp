@@ -20,7 +20,6 @@ import io.ktor.http.URLBuilder
 import io.ktor.http.Url
 import io.ktor.http.isSuccess
 import io.ktor.http.takeFrom
-import org.jetbrains.annotations.VisibleForTesting
 import org.xmlpull.v1.XmlPullParser
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -141,7 +140,6 @@ class ResponseParser(
         )
     }
 
-    @VisibleForTesting
     internal fun resolveHref(hrefString: String): Url? {
         var sHref = hrefString
 

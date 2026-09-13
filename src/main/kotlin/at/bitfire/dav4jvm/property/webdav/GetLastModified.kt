@@ -14,7 +14,7 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
-import java.time.Instant
+import kotlin.time.Instant
 
 data class GetLastModified(
     val lastModified: Instant?

@@ -15,6 +15,7 @@ import at.bitfire.dav4jvm.Property
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Url
 import io.ktor.http.isSuccess
+import kotlin.reflect.KClass
 
 /**
  * Represents a WebDAV response XML Element.
@@ -75,8 +76,12 @@ data class Response(
      * Convenience method to get a certain property with empty status or status code 2xx
      * from the current response.
      */
-    operator fun<T: Property> get(clazz: Class<T>) =
-            properties.filterIsInstance(clazz).firstOrNull()
+    @Suppress("UNCHECKED_CAST")
+    operator fun<T: Property> get(clazz: KClass<T>) =
+            properties.firstOrNull { clazz.isInstance(it) } as T?
+
+    inline fun <reified T: Property> get() =
+            properties.filterIsInstance<T>().firstOrNull()
 
     /**
      * Returns whether the request was successful.

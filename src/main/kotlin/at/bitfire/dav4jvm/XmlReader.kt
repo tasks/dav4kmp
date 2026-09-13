@@ -16,10 +16,10 @@ import at.bitfire.dav4jvm.property.caldav.SupportedCalendarData.Companion.VERSIO
 import io.ktor.http.ContentType
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
-import java.io.IOException
-import java.time.Instant
+import kotlinx.io.IOException
 import java.util.logging.Level
 import java.util.logging.Logger
+import kotlin.time.Instant
 
 /**
  * Reads/processes XML tags which are used for WebDAV.

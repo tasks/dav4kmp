@@ -10,7 +10,6 @@
 
 package at.bitfire.dav4jvm.ktor
 
-import com.google.common.net.InetAddresses
 import io.ktor.http.*
 
 object UrlUtils {
@@ -32,7 +31,7 @@ object UrlUtils {
         // remove optional dot at end
         val withoutTrailingDot = host.removeSuffix(".")
 
-        if (InetAddresses.isInetAddress(withoutTrailingDot))
+        if (hostIsIp(withoutTrailingDot) || withoutTrailingDot.contains(':'))
             return withoutTrailingDot
 
         // split into labels

@@ -598,7 +598,7 @@ class DavResourceTest {
             .single()
         assertTrue(response.isSuccess())
         assertEquals(Response.HrefRelation.SELF, relation)
-        assertEquals("My DAV Collection", response[DisplayName::class.java]?.displayName)
+        assertEquals("My DAV Collection", response[DisplayName::class]?.displayName)
     }
 
     @Test
@@ -664,37 +664,37 @@ class DavResourceTest {
                 sampleUrl.resolve("/dav/") -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.SELF, relation)
-                    assertTrue(response[ResourceType::class.java]!!.types.contains(WebDAV.Collection))
-                    assertEquals("My DAV Collection", response[DisplayName::class.java]?.displayName)
+                    assertTrue(response[ResourceType::class]!!.types.contains(WebDAV.Collection))
+                    assertEquals("My DAV Collection", response[DisplayName::class]?.displayName)
                     nrCalled++
                 }
 
                 sampleUrl.resolve("/dav/subcollection/") -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.MEMBER, relation)
-                    assertTrue(response[ResourceType::class.java]!!.types.contains(WebDAV.Collection))
-                    assertEquals("A Subfolder", response[DisplayName::class.java]?.displayName)
+                    assertTrue(response[ResourceType::class]!!.types.contains(WebDAV.Collection))
+                    assertEquals("A Subfolder", response[DisplayName::class]?.displayName)
                     nrCalled++
                 }
 
                 sampleUrl.resolve("/dav/uid@host:file") -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.MEMBER, relation)
-                    assertEquals("Absolute path with @ and :", response[DisplayName::class.java]?.displayName)
+                    assertEquals("Absolute path with @ and :", response[DisplayName::class]?.displayName)
                     nrCalled++
                 }
 
                 sampleUrl.resolve("/dav/relative-uid@host.file") -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.MEMBER, relation)
-                    assertEquals("Relative path with @", response[DisplayName::class.java]?.displayName)
+                    assertEquals("Relative path with @", response[DisplayName::class]?.displayName)
                     nrCalled++
                 }
 
                 sampleUrl.resolve("/dav/relative:colon.vcf") -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.MEMBER, relation)
-                    assertEquals("Relative path with colon", response[DisplayName::class.java]?.displayName)
+                    assertEquals("Relative path with colon", response[DisplayName::class]?.displayName)
                     nrCalled++
                 }
             }
@@ -730,8 +730,8 @@ class DavResourceTest {
         assertTrue(response.isSuccess())
         assertEquals(Response.HrefRelation.SELF, relation)
         assertEquals(sampleUrl.resolve("/dav/"), response.href)
-        assertTrue(response[ResourceType::class.java]!!.types.contains(WebDAV.Collection))
-        assertEquals("My DAV Collection", response[DisplayName::class.java]?.displayName)
+        assertTrue(response[ResourceType::class]!!.types.contains(WebDAV.Collection))
+        assertEquals("My DAV Collection", response[DisplayName::class]?.displayName)
     }
 
     @Test
@@ -750,7 +750,7 @@ class DavResourceTest {
         )
         val response = dav.propfind(0, WebDAV.DisplayName).responses().single()
         assertEquals(200, response.propstat.first().status.value)
-        assertEquals("Without Status", response[DisplayName::class.java]?.displayName)
+        assertEquals("Without Status", response[DisplayName::class]?.displayName)
     }
 
     @Test
@@ -893,7 +893,7 @@ class DavResourceTest {
         val dav = davResource(engine)
         val (response, relation) = dav.search("<TEST/>").responsesWithRelation().single()
         assertEquals(Response.HrefRelation.SELF, relation)
-        assertEquals("Found something", response[DisplayName::class.java]?.displayName)
+        assertEquals("Found something", response[DisplayName::class]?.displayName)
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.parse("SEARCH"), method)
             assertEquals(sampleUrl.encodedPath, url.encodedPath)

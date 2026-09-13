@@ -16,7 +16,7 @@ import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlReader
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import org.xmlpull.v1.XmlPullParser
-import java.time.Instant
+import kotlin.time.Instant
 
 /**
  * Represents a [NS_WEBDAV_PUSH]`:push-register` property.

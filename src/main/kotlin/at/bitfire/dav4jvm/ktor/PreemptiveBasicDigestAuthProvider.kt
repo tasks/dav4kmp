@@ -20,6 +20,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.auth.AuthScheme
 import io.ktor.http.auth.HttpAuthHeader
 import io.ktor.http.encodedPath
+import kotlin.concurrent.Volatile
 
 /**
  * An [AuthProvider] that tries Basic auth preemptively and switches to Digest auth (remembered

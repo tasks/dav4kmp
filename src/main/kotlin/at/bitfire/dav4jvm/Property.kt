@@ -12,7 +12,6 @@ package at.bitfire.dav4jvm
 
 import org.xmlpull.v1.XmlPullParser
 import java.io.Serializable
-import java.util.LinkedList
 import java.util.logging.Level
 import java.util.logging.Logger
 
@@ -43,17 +42,15 @@ interface Property {
 
             // <!ELEMENT prop ANY >
             val depth = parser.depth
-            val properties = LinkedList<Property>()
+            val properties = ArrayList<Property>()
 
             var eventType = parser.eventType
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
-                    val depthBeforeParsing = parser.depth
                     val name = Name(parser.namespace, parser.name)
 
                     try {
                         val property = PropertyRegistry.create(name, parser)
-                        assert(parser.depth == depthBeforeParsing)
 
                         if (property != null) {
                             properties.add(property)
