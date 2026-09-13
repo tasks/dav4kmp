@@ -12,7 +12,6 @@ package at.bitfire.dav4jvm
 
 import nl.adaptivity.xmlutil.EventType
 import nl.adaptivity.xmlutil.XmlReader
-import java.io.Serializable
 
 /**
  * Represents an XML precondition/postcondition error. Every error has a name, which is the XML element
@@ -24,7 +23,7 @@ import java.io.Serializable
  */
 data class Error(
     val name: Property.Name
-): Serializable {
+): JvmSerializable {
 
     companion object {
 

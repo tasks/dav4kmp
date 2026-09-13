@@ -13,7 +13,6 @@ package at.bitfire.dav4jvm
 import io.ktor.util.logging.KtorSimpleLogger
 import nl.adaptivity.xmlutil.EventType
 import nl.adaptivity.xmlutil.XmlReader
-import java.io.Serializable
 
 /**
  * Represents a WebDAV property.
@@ -29,7 +28,7 @@ interface Property {
     data class Name(
         val namespace: String,
         val name: String
-    ): Serializable {
+    ): JvmSerializable {
 
         override fun toString() = "$namespace:$name"
 
