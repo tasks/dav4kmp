@@ -25,7 +25,6 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.Url
 import io.ktor.http.contentType
 import kotlinx.coroutines.flow.Flow
-import java.io.StringWriter
 import java.util.logging.Logger
 
 class DavAddressBook(
@@ -49,19 +48,12 @@ class DavAddressBook(
                                          DAV:prop)?, filter, limit?)>
            <!ELEMENT filter (prop-filter*)>
         */
-        val serializer = XmlUtils.newSerializer()
-        val writer = StringWriter()
-        serializer.setOutput(writer)
-        serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", WebDAV.NS_WEBDAV)
-        serializer.setPrefix("CARD", CardDAV.NS_CARDDAV)
-        serializer.insertTag(CardDAV.AddressbookQuery) {
+        val body = XmlUtils.buildDocument(listOf("" to WebDAV.NS_WEBDAV, "CARD" to CardDAV.NS_CARDDAV), CardDAV.AddressbookQuery) {
             insertTag(WebDAV.Prop) {
                 insertTag(WebDAV.GetETag)
             }
             insertTag(CardDAV.Filter)
         }
-        serializer.endDocument()
 
         return multiStatusFlow {
             httpClient.prepareRequest(location) {
@@ -71,7 +63,7 @@ class DavAddressBook(
 
                 acceptXml()
                 contentType(MIME_XML_UTF8)
-                setBody(writer.toString())
+                setBody(body)
             }
         }
     }
@@ -101,21 +93,15 @@ class DavAddressBook(
                                             DAV:prop)?,
                                             DAV:href+)>
         */
-        val serializer = XmlUtils.newSerializer()
-        val writer = StringWriter()
-        serializer.setOutput(writer)
-        serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", WebDAV.NS_WEBDAV)
-        serializer.setPrefix("CARD", CardDAV.NS_CARDDAV)
-        serializer.insertTag(CardDAV.AddressbookMultiget) {
+        val body = XmlUtils.buildDocument(listOf("" to WebDAV.NS_WEBDAV, "CARD" to CardDAV.NS_CARDDAV), CardDAV.AddressbookMultiget) {
             insertTag(WebDAV.Prop) {
                 insertTag(WebDAV.GetContentType)
                 insertTag(WebDAV.GetETag)
                 insertTag(CardDAV.AddressData) {
                     if (contentType != null)
-                        attribute(null, AddressData.CONTENT_TYPE, contentType)
+                        attribute(null, AddressData.CONTENT_TYPE, null, contentType)
                     if (version != null)
-                        attribute(null, AddressData.VERSION, version)
+                        attribute(null, AddressData.VERSION, null, version)
                 }
             }
             for (url in urls)
@@ -123,7 +109,6 @@ class DavAddressBook(
                     text(url.encodedPath)
                 }
         }
-        serializer.endDocument()
 
         return multiStatusFlow {
             httpClient.prepareRequest(location) {
@@ -133,7 +118,7 @@ class DavAddressBook(
 
                 acceptXml()
                 contentType(MIME_XML_UTF8)
-                setBody(writer.toString())
+                setBody(body)
             }
         }
     }

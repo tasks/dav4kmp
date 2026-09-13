@@ -13,10 +13,10 @@ package at.bitfire.dav4jvm.property.webdav
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.QuotedStringUtils
-import at.bitfire.dav4jvm.XmlReader
+import at.bitfire.dav4jvm.readText
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.HttpHeaders
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.XmlReader
 
 /**
  * The GetETag property.
@@ -84,8 +84,8 @@ data class GetETag(
 
         override fun getName() = WebDAV.GetETag
 
-        override fun create(parser: XmlPullParser): GetETag =
-            GetETag(XmlReader(parser).readText())
+        override fun create(parser: XmlReader): GetETag =
+            GetETag(parser.readText())
 
     }
 

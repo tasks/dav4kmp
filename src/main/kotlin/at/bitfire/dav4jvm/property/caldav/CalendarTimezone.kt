@@ -12,8 +12,8 @@ package at.bitfire.dav4jvm.property.caldav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlReader
-import org.xmlpull.v1.XmlPullParser
+import at.bitfire.dav4jvm.readText
+import nl.adaptivity.xmlutil.XmlReader
 
 data class CalendarTimezone(
     val vTimeZone: String?
@@ -23,9 +23,9 @@ data class CalendarTimezone(
 
         override fun getName() = CalDAV.CalendarTimezone
 
-        override fun create(parser: XmlPullParser) =
+        override fun create(parser: XmlReader) =
             // <!ELEMENT calendar-timezone (#PCDATA)>
-            CalendarTimezone(XmlReader(parser).readText())
+            CalendarTimezone(parser.readText())
 
     }
 }

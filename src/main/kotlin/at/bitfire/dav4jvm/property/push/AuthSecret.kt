@@ -12,8 +12,8 @@ package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlReader
-import org.xmlpull.v1.XmlPullParser
+import at.bitfire.dav4jvm.readText
+import nl.adaptivity.xmlutil.XmlReader
 
 /**
  * Represents an `auth-secret` property.
@@ -28,8 +28,8 @@ data class AuthSecret(
 
         override fun getName() = WebDAVPush.AuthSecret
 
-        override fun create(parser: XmlPullParser): AuthSecret =
-            AuthSecret(XmlReader(parser).readText())
+        override fun create(parser: XmlReader): AuthSecret =
+            AuthSecret(parser.readText())
 
     }
 

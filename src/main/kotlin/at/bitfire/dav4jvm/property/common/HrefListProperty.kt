@@ -12,9 +12,9 @@ package at.bitfire.dav4jvm.property.common
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlReader
 import at.bitfire.dav4jvm.property.webdav.WebDAV
-import org.xmlpull.v1.XmlPullParser
+import at.bitfire.dav4jvm.readTextPropertyList
+import nl.adaptivity.xmlutil.XmlReader
 
 /**
  * Represents a list of hrefs.
@@ -28,18 +28,18 @@ abstract class HrefListProperty(
     abstract class Factory : PropertyFactory {
 
         @Deprecated("hrefs is no longer mutable.", level = DeprecationLevel.ERROR)
-        fun create(parser: XmlPullParser, list: HrefListProperty): HrefListProperty {
+        fun create(parser: XmlReader, list: HrefListProperty): HrefListProperty {
             val hrefs = list.hrefs.toMutableList()
-            XmlReader(parser).readTextPropertyList(WebDAV.Href, hrefs)
+            parser.readTextPropertyList(WebDAV.Href, hrefs)
             return list
         }
 
         fun <PropertyType> create(
-            parser: XmlPullParser,
+            parser: XmlReader,
             constructor: (hrefs: List<String>
                 ) -> PropertyType): PropertyType {
             val hrefs = mutableListOf<String>()
-            XmlReader(parser).readTextPropertyList(WebDAV.Href, hrefs)
+            parser.readTextPropertyList(WebDAV.Href, hrefs)
             return constructor(hrefs)
         }
 

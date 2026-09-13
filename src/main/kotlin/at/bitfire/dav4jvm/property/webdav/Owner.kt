@@ -11,9 +11,9 @@
 package at.bitfire.dav4jvm.property.webdav
 
 import at.bitfire.dav4jvm.Property
-import at.bitfire.dav4jvm.XmlReader
 import at.bitfire.dav4jvm.property.common.HrefListProperty
-import org.xmlpull.v1.XmlPullParser
+import at.bitfire.dav4jvm.readTextProperty
+import nl.adaptivity.xmlutil.XmlReader
 
 data class Owner(
     val href: String?
@@ -23,8 +23,8 @@ data class Owner(
 
         override fun getName() = WebDAV.Owner
 
-        override fun create(parser: XmlPullParser): Owner =
-            Owner(XmlReader(parser).readTextProperty(WebDAV.Href))
+        override fun create(parser: XmlReader): Owner =
+            Owner(parser.readTextProperty(WebDAV.Href))
 
     }
 

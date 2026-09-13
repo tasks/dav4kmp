@@ -12,8 +12,8 @@ package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlReader
-import org.xmlpull.v1.XmlPullParser
+import at.bitfire.dav4jvm.readText
+import nl.adaptivity.xmlutil.XmlReader
 
 /**
  * Represents a `content-encoding` property.
@@ -32,8 +32,8 @@ data class ContentEncoding(
 
         override fun getName() = WebDAVPush.ContentEncoding
 
-        override fun create(parser: XmlPullParser): ContentEncoding =
-            ContentEncoding(XmlReader(parser).readText() ?: AES128GCM)
+        override fun create(parser: XmlReader): ContentEncoding =
+            ContentEncoding(parser.readText() ?: AES128GCM)
 
     }
 

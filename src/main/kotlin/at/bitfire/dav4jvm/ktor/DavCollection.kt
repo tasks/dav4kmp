@@ -23,7 +23,6 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.Url
 import io.ktor.http.contentType
 import kotlinx.coroutines.flow.Flow
-import java.io.StringWriter
 import java.util.logging.Logger
 
 /**
@@ -68,12 +67,7 @@ open class DavCollection @JvmOverloads constructor(
 
            <!-- DAV:prop defined in RFC 4918, Section 14.18 -->
         */
-        val serializer = XmlUtils.newSerializer()
-        val writer = StringWriter()
-        serializer.setOutput(writer)
-        serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", WebDAV.NS_WEBDAV)
-        serializer.insertTag(WebDAV.SyncCollection) {
+        val body = XmlUtils.buildDocument(listOf("" to WebDAV.NS_WEBDAV), WebDAV.SyncCollection) {
             insertTag(WebDAV.SyncToken) {
                 if (syncToken != null)
                     text(syncToken)
@@ -92,7 +86,6 @@ open class DavCollection @JvmOverloads constructor(
                     insertTag(prop)
             }
         }
-        serializer.endDocument()
 
         return multiStatusFlow {
             httpClient.prepareRequest(location) {
@@ -102,7 +95,7 @@ open class DavCollection @JvmOverloads constructor(
 
                 acceptXml()
                 contentType(MIME_XML_UTF8)
-                setBody(writer.toString())
+                setBody(body)
             }
         }
     }

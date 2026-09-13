@@ -26,11 +26,9 @@ import io.ktor.http.content.TextContent
 import io.ktor.http.contentType
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.readBuffer
-import kotlinx.io.EOFException
 import kotlinx.io.readString
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserException
-import java.io.StringReader
+import nl.adaptivity.xmlutil.EventType
+import nl.adaptivity.xmlutil.XmlException
 import kotlin.math.min
 
 internal class HttpResponseInfo private constructor(
@@ -108,19 +106,16 @@ internal class HttpResponseInfo private constructor(
 
         private fun extractErrors(xml: String): List<Error> {
             try {
-                val parser = XmlUtils.newPullParser()
-                parser.setInput(StringReader(xml))
+                val parser = XmlUtils.newReader(xml)
 
                 var eventType = parser.eventType
-                while (eventType != XmlPullParser.END_DOCUMENT) {
-                    if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
+                while (eventType != EventType.END_DOCUMENT) {
+                    if (eventType == EventType.START_ELEMENT && parser.depth == 1)
                         if (parser.propertyName() == WebDAV.Error)
                             return Error.parseError(parser)
                     eventType = parser.next()
                 }
-            } catch (_: XmlPullParserException) {
-                // Couldn't parse XML, either invalid or maybe it wasn't even XML
-            } catch (_: EOFException) {
+            } catch (_: XmlException) {
                 // Couldn't parse XML, either invalid or maybe it wasn't even XML
             }
 

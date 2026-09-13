@@ -12,8 +12,8 @@ package at.bitfire.dav4jvm.property.webdav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlReader
-import org.xmlpull.v1.XmlPullParser
+import at.bitfire.dav4jvm.readText
+import nl.adaptivity.xmlutil.XmlReader
 
 data class GetContentType(
     val type: String?
@@ -23,8 +23,8 @@ data class GetContentType(
 
         override fun getName() = WebDAV.GetContentType
 
-        override fun create(parser: XmlPullParser) =
+        override fun create(parser: XmlReader) =
             // <!ELEMENT getcontenttype (#PCDATA) >
-            GetContentType(XmlReader(parser).readText())
+            GetContentType(parser.readText())
     }
 }

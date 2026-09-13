@@ -12,8 +12,8 @@ package at.bitfire.dav4jvm.property.webdav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlReader
-import org.xmlpull.v1.XmlPullParser
+import at.bitfire.dav4jvm.readText
+import nl.adaptivity.xmlutil.XmlReader
 
 /**
  * Represents a [NS_WEBDAV]`:sync-level` property.
@@ -27,8 +27,8 @@ data class SyncLevel(
 
         override fun getName() = WebDAV.SyncLevel
 
-        override fun create(parser: XmlPullParser): SyncLevel {
-            val text = XmlReader(parser).readText()
+        override fun create(parser: XmlReader): SyncLevel {
+            val text = parser.readText()
             val level = if (text == "infinite") Int.MAX_VALUE else text?.toIntOrNull()
             return SyncLevel(level)
         }

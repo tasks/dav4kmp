@@ -13,9 +13,10 @@ package at.bitfire.dav4jvm.property.push
 import at.bitfire.dav4jvm.HttpUtils
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlReader
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import org.xmlpull.v1.XmlPullParser
+import at.bitfire.dav4jvm.readText
+import nl.adaptivity.xmlutil.EventType
+import nl.adaptivity.xmlutil.XmlReader
 import kotlin.time.Instant
 
 /**
@@ -33,17 +34,17 @@ data class PushRegister(
 
         override fun getName() = WebDAVPush.PushRegister
 
-        override fun create(parser: XmlPullParser): PushRegister {
+        override fun create(parser: XmlReader): PushRegister {
             var register = PushRegister()
 
             val depth = parser.depth
             var eventType = parser.eventType
-            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
+            while (eventType != EventType.END_DOCUMENT && !(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
+                if (eventType == EventType.START_ELEMENT && parser.depth == depth + 1)
                     when (parser.propertyName()) {
                         WebDAVPush.Expires ->
                             register = register.copy(
-                                expires = XmlReader(parser).readText()?.let {
+                                expires = parser.readText()?.let {
                                     HttpUtils.parseDate(it)
                                 }
                             )

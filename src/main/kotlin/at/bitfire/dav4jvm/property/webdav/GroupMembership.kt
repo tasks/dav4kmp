@@ -11,7 +11,7 @@
 package at.bitfire.dav4jvm.property.webdav
 
 import at.bitfire.dav4jvm.property.common.HrefListProperty
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.XmlReader
 
 class GroupMembership(
     override val hrefs: List<String>
@@ -21,7 +21,7 @@ class GroupMembership(
 
         override fun getName() = WebDAV.GroupMembership
 
-        override fun create(parser: XmlPullParser) = create(parser, ::GroupMembership)
+        override fun create(parser: XmlReader) = create(parser, ::GroupMembership)
 
     }
 

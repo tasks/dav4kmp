@@ -13,7 +13,8 @@ package at.bitfire.dav4jvm.property.push
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.EventType
+import nl.adaptivity.xmlutil.XmlReader
 
 /**
  * Represents a [NS_WEBDAV_PUSH]`:push-message` property.
@@ -30,13 +31,13 @@ data class PushMessage(
 
         override fun getName() = WebDAVPush.PushMessage
 
-        override fun create(parser: XmlPullParser): PushMessage {
+        override fun create(parser: XmlReader): PushMessage {
             var message = PushMessage()
 
             val depth = parser.depth
             var eventType = parser.eventType
-            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
+            while (eventType != EventType.END_DOCUMENT && !(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
+                if (eventType == EventType.START_ELEMENT && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
                         WebDAVPush.Topic -> message = message.copy(
                             topic = Topic.Factory.create(parser)

@@ -48,17 +48,15 @@ import io.ktor.http.isSecure
 import io.ktor.http.isSuccess
 import io.ktor.http.withCharset
 import io.ktor.utils.io.ByteReadChannel
-import io.ktor.utils.io.jvm.javaio.toInputStream
+import io.ktor.utils.io.charsets.Charsets
 import io.ktor.utils.io.peek
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
-import kotlinx.io.bytestring.encodeToByteString
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserException
-import kotlinx.io.EOFException
 import kotlinx.io.IOException
-import java.io.StringWriter
+import kotlinx.io.bytestring.encodeToByteString
+import nl.adaptivity.xmlutil.EventType
+import nl.adaptivity.xmlutil.XmlException
 import java.util.logging.Level
 import java.util.logging.Logger
 
@@ -101,19 +99,13 @@ open class DavResource(
             setProperties: Map<Property.Name, String>,
             removeProperties: List<Property.Name>
         ): String {
-            // build XML request body
-            val serializer = XmlUtils.newSerializer()
-            val writer = StringWriter()
-            serializer.setOutput(writer)
-            serializer.setPrefix("d", WebDAV.NS_WEBDAV)
-            serializer.startDocument("UTF-8", null)
-            serializer.insertTag(WebDAV.PropertyUpdate) {
+            return XmlUtils.buildDocument(listOf("d" to WebDAV.NS_WEBDAV), WebDAV.PropertyUpdate) {
                 // DAV:set
                 if (setProperties.isNotEmpty()) {
-                    serializer.insertTag(WebDAV.Set) {
+                    insertTag(WebDAV.Set) {
                         for (prop in setProperties) {
-                            serializer.insertTag(WebDAV.Prop) {
-                                serializer.insertTag(prop.key) {
+                            insertTag(WebDAV.Prop) {
+                                insertTag(prop.key) {
                                     text(prop.value)
                                 }
                             }
@@ -123,7 +115,7 @@ open class DavResource(
 
                 // DAV:remove
                 if (removeProperties.isNotEmpty()) {
-                    serializer.insertTag(WebDAV.Remove) {
+                    insertTag(WebDAV.Remove) {
                         for (prop in removeProperties) {
                             insertTag(WebDAV.Prop) {
                                 insertTag(prop)
@@ -132,9 +124,6 @@ open class DavResource(
                     }
                 }
             }
-
-            serializer.endDocument()
-            return writer.toString()
         }
 
     }
@@ -488,20 +477,12 @@ open class DavResource(
      */
     fun propfind(depth: Int, vararg reqProp: Property.Name): Flow<MultiStatusItem> {
         // build XML request body
-        val serializer = XmlUtils.newSerializer()
-        val writer = StringWriter()
-        serializer.setOutput(writer)
-        serializer.setPrefix("", WebDAV.NS_WEBDAV)
-        serializer.setPrefix("CAL", CalDAV.NS_CALDAV)
-        serializer.setPrefix("CARD", CardDAV.NS_CARDDAV)
-        serializer.startDocument("UTF-8", null)
-        serializer.insertTag(WebDAV.PropFind) {
+        val body = XmlUtils.buildDocument(listOf("" to WebDAV.NS_WEBDAV, "CAL" to CalDAV.NS_CALDAV, "CARD" to CardDAV.NS_CARDDAV), WebDAV.PropFind) {
             insertTag(WebDAV.Prop) {
                 for (prop in reqProp)
                     insertTag(prop)
             }
         }
-        serializer.endDocument()
 
         return multiStatusFlow {
             httpClient.prepareRequest(location) {
@@ -511,7 +492,7 @@ open class DavResource(
 
                 acceptXml()
                 contentType(MIME_XML_UTF8)
-                setBody(writer.toString())
+                setBody(body)
             }
         }
     }
@@ -720,8 +701,16 @@ open class DavResource(
     /**
      * Processes a Multi-Status response.
      *
-     * The [response] must still be open (its body not yet closed) while [collector] is being fed —
-     * call this from within the block that received [response], before it returns.
+     * The response body is parsed while it is being received, so the [response] must still be open
+     * (its body not yet closed) while [collector] is being fed — call this from within the block
+     * that received [response], before it returns.
+     *
+     * The XML parser pulls from the body synchronously, so this method **blocks the calling thread**
+     * while waiting for more data (like `ByteReadChannel.asSource()` does).
+     *
+     * The body is decoded with the encoding the XML document itself indicates (BOM or XML
+     * declaration), UTF-8 otherwise; the charset from the `Content-Type` header is not taken into
+     * account (see [XmlUtils.newReader]).
      *
      * @param response  unconsumed response which is expected to contain a Multi-Status response
      * @param collector collector that every [MultiStatusItem] found in the Multi-Status response is
@@ -739,31 +728,25 @@ open class DavResource(
         // verify that the response is 207 Multi-Status
         assertMultiStatus(response, bodyChannel)
 
-        val parser = XmlUtils.newPullParser()
-
         try {
-            bodyChannel.toInputStream().use { stream ->
-                parser.setInput(stream, null)
+            val parser = XmlUtils.newReader(bodyChannel)
 
-                var eventType = parser.eventType
-                while (eventType != XmlPullParser.END_DOCUMENT) {
-                    if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
-                        if (parser.propertyName() == WebDAV.MultiStatus) {
-                            MultiStatusParser(location).parseResponse(parser, collector)
-                            return
-                            // further <multistatus> elements are ignored
-                        }
+            var eventType = parser.eventType
+            while (eventType != EventType.END_DOCUMENT) {
+                if (eventType == EventType.START_ELEMENT && parser.depth == 1)
+                    if (parser.propertyName() == WebDAV.MultiStatus) {
+                        MultiStatusParser(location).parseResponse(parser, collector)
+                        return
+                        // further <multistatus> elements are ignored
+                    }
 
-                    eventType = parser.next()
-                }
+                eventType = parser.next()
             }
 
             throw DavException("Multi-Status response didn't contain multistatus XML element")
 
-        } catch (e: EOFException) {
-            throw DavException("Incomplete multistatus XML element", cause = e)
-        } catch (e: XmlPullParserException) {
-            throw DavException("Couldn't parse multistatus XML element", cause = e)
+        } catch (e: XmlException) {
+            throw DavException("Couldn't parse multistatus XML element: ${e.message}")
         }
     }
 

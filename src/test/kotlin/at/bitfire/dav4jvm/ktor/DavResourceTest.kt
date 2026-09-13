@@ -17,6 +17,8 @@ import at.bitfire.dav4jvm.property.webdav.DisplayName
 import at.bitfire.dav4jvm.property.webdav.GetETag
 import at.bitfire.dav4jvm.property.webdav.ResourceType
 import at.bitfire.dav4jvm.property.webdav.WebDAV
+import at.bitfire.dav4jvm.toLatin1
+import at.bitfire.dav4jvm.toUtf16
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -40,12 +42,23 @@ import io.ktor.http.contentType
 import io.ktor.http.fullPath
 import io.ktor.http.headersOf
 import io.ktor.http.withCharset
+import io.ktor.utils.io.ByteChannel
+import io.ktor.utils.io.charsets.Charsets
+import io.ktor.utils.io.close
+import io.ktor.utils.io.writeFully
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
@@ -487,6 +500,125 @@ class DavResourceTest {
         }
     }
 
+    @Test(expected = DavException::class)
+    fun `propfind truncated XML throws DavException`() = runTest {
+        val dav = davResource(propfindEngine("<multistatus xmlns='DAV:'><response><href>/x</href>"))
+        dav.propfind(0, WebDAV.ResourceType).toList()
+    }
+
+    @Test(expected = DavException::class)
+    fun `propfind truncated XML inside tag throws DavException`() = runTest {
+        val dav = davResource(propfindEngine("<multistatus xmlns='DAV:'><resp"))
+        dav.propfind(0, WebDAV.ResourceType).toList()
+    }
+
+    @Test(expected = DavException::class)
+    fun `propfind truncated XML inside property throws DavException`() = runTest {
+        val dav = davResource(propfindEngine("<multistatus xmlns='DAV:'><response><href>/x</href><propstat><prop><displayname>abc"))
+        dav.propfind(0, WebDAV.DisplayName).toList()
+    }
+
+    @Test(expected = DavException::class)
+    fun `propfind non-XML body with XML Content-Type throws DavException`() = runTest {
+        val dav = davResource(propfindEngine("Some error occurred"))
+        dav.propfind(0, WebDAV.ResourceType).toList()
+    }
+
+    @Test(expected = DavException::class)
+    fun `propfind empty body with XML Content-Type throws DavException`() = runTest {
+        val dav = davResource(propfindEngine(""))
+        dav.propfind(0, WebDAV.ResourceType).toList()
+    }
+
+    @Test
+    fun `propfind ignores charset from Content-Type`() = runTest {
+        val dav = davResource(MockEngine {
+            respond(
+                displayNameMultiStatus("café ☕").encodeToByteArray(), HttpStatusCode.MultiStatus,
+                headersOf(HttpHeaders.ContentType, ContentType.Text.Xml.withCharset(Charsets.ISO_8859_1).toString())
+            )
+        })
+        val response = dav.propfind(0, WebDAV.DisplayName).responses().single()
+        assertEquals("café ☕", response[DisplayName::class]?.displayName)
+    }
+
+    @Test
+    fun `propfind uses encoding from XML declaration without Content-Type charset`() = runTest {
+        val dav = davResource(MockEngine {
+            respond(
+                ("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + displayNameMultiStatus("café")).toLatin1(),
+                HttpStatusCode.MultiStatus,
+                headersOf(HttpHeaders.ContentType, ContentType.Text.Xml.toString())
+            )
+        })
+        val response = dav.propfind(0, WebDAV.DisplayName).responses().single()
+        assertEquals("café", response[DisplayName::class]?.displayName)
+    }
+
+    @Test
+    fun `propfind uses BOM without Content-Type charset`() = runTest {
+        val utf16 = displayNameMultiStatus("café").toUtf16(bigEndian = true)
+        val dav = davResource(MockEngine {
+            respond(
+                byteArrayOf(0xFE.toByte(), 0xFF.toByte()) + utf16, HttpStatusCode.MultiStatus,
+                headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.toString())
+            )
+        })
+        val response = dav.propfind(0, WebDAV.DisplayName).responses().single()
+        assertEquals("café", response[DisplayName::class]?.displayName)
+    }
+
+    @Test
+    fun `propfind assumes UTF-8 without Content-Type charset`() = runTest {
+        val dav = davResource(MockEngine {
+            respond(
+                displayNameMultiStatus("café ☕").encodeToByteArray(), HttpStatusCode.MultiStatus,
+                headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.toString())
+            )
+        })
+        val response = dav.propfind(0, WebDAV.DisplayName).responses().single()
+        assertEquals("café ☕", response[DisplayName::class]?.displayName)
+    }
+
+    @Test
+    fun `propfind emits responses while the body is being received`() = runTest {
+        val body = ByteChannel()
+        val firstResponseSeen = CompletableDeferred<Unit>()
+
+        launch(Dispatchers.Default) {
+            try {
+                body.writeFully((
+                    "<multistatus xmlns='DAV:'>" +
+                    "  <response><href>/dav/first</href><status>HTTP/1.1 200 OK</status></response>" +
+                    " ".repeat(64 * 1024)
+                ).encodeToByteArray())
+                body.flush()
+
+                withTimeout(10_000) { firstResponseSeen.await() }
+
+                body.writeFully((
+                    "  <response><href>/dav/second</href><status>HTTP/1.1 200 OK</status></response>" +
+                    "</multistatus>"
+                ).encodeToByteArray())
+                body.flushAndClose()
+            } catch (e: Exception) {
+                body.close(e)
+            }
+        }
+
+        val dav = davResource(MockEngine {
+            respond(body, HttpStatusCode.MultiStatus, headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.toString()))
+        })
+        val hrefs = withContext(Dispatchers.Default) {
+            dav.propfind(0, WebDAV.ResourceType).responses().map { response ->
+                if (response.href.fullPath == "/dav/first")
+                    firstResponseSeen.complete(Unit)
+                response.href.fullPath
+            }.toList()
+        }
+        assertEquals(listOf("/dav/first", "/dav/second"), hrefs)
+    }
+
     @Test
     fun `propfind no multistatus root throws DavException`() = runTest {
         val dav = davResource(propfindEngine("<test></test>"))
@@ -495,6 +627,23 @@ class DavResourceTest {
             fail("Expected DavException")
         } catch (_: DavException) {
         }
+    }
+
+    @Test
+    fun `propfind keeps property with unknown entity reference`() = runTest {
+        val dav = davResource(propfindEngine(
+            "<multistatus xmlns='DAV:'>" +
+            "  <response>" +
+            "    <href>/dav</href>" +
+            "    <propstat>" +
+            "      <prop><displayname>Team&nbsp;Calendar &amp; Contacts</displayname></prop>" +
+            "      <status>HTTP/1.1 200 OK</status>" +
+            "    </propstat>" +
+            "  </response>" +
+            "</multistatus>"
+        ))
+        val response = dav.propfind(0, WebDAV.DisplayName).responses().single()
+        assertEquals("TeamCalendar & Contacts", response[DisplayName::class]?.displayName)
     }
 
     @Test
@@ -801,7 +950,7 @@ class DavResourceTest {
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
                     "<d:propertyupdate xmlns:d=\"DAV:\">" +
                     "<d:set><d:prop><n1:setThis xmlns:n1=\"sample\">Some Value</n1:setThis></d:prop></d:set>" +
-                    "<d:remove><d:prop><n2:removeThis xmlns:n2=\"sample\" /></d:prop></d:remove>" +
+                    "<d:remove><d:prop><n1:removeThis xmlns:n1=\"sample\" /></d:prop></d:remove>" +
                     "</d:propertyupdate>", xml
         )
     }
@@ -970,5 +1119,17 @@ class DavResourceTest {
             )
         )
     }
+
+
+    private fun displayNameMultiStatus(displayName: String) =
+        "<multistatus xmlns='DAV:'>" +
+        "  <response>" +
+        "    <href>/dav</href>" +
+        "    <propstat>" +
+        "      <prop><displayname>$displayName</displayname></prop>" +
+        "      <status>HTTP/1.1 200 OK</status>" +
+        "    </propstat>" +
+        "  </response>" +
+        "</multistatus>"
 
 }

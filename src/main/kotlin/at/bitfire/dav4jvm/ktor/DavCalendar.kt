@@ -27,7 +27,6 @@ import io.ktor.http.Url
 import io.ktor.http.contentType
 import io.ktor.util.date.GMTDate
 import kotlinx.coroutines.flow.Flow
-import java.io.StringWriter
 import java.util.logging.Logger
 import kotlin.time.Instant
 
@@ -69,35 +68,28 @@ class DavCalendar(
                        type (e.g., VEVENT)
 
         */
-        val serializer = XmlUtils.newSerializer()
-        val writer = StringWriter()
-        serializer.setOutput(writer)
-        serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", WebDAV.NS_WEBDAV)
-        serializer.setPrefix("CAL", CalDAV.NS_CALDAV)
-        serializer.insertTag(CalDAV.CalendarQuery) {
+        val body = XmlUtils.buildDocument(listOf("" to WebDAV.NS_WEBDAV, "CAL" to CalDAV.NS_CALDAV), CalDAV.CalendarQuery) {
             insertTag(WebDAV.Prop) {
                 for (prop in props)
                     insertTag(prop)
             }
             insertTag(CalDAV.Filter) {
                 insertTag(CalDAV.CompFilter) {
-                    attribute(null, COMP_FILTER_NAME, "VCALENDAR")
+                    attribute(null, COMP_FILTER_NAME, null, "VCALENDAR")
                     insertTag(CalDAV.CompFilter) {
-                        attribute(null, COMP_FILTER_NAME, component)
+                        attribute(null, COMP_FILTER_NAME, null, component)
                         if (start != null || end != null) {
                             insertTag(CalDAV.TimeRange) {
                                 if (start != null)
-                                    attribute(null, TIME_RANGE_START, formatUtc(start))
+                                    attribute(null, TIME_RANGE_START, null, formatUtc(start))
                                 if (end != null)
-                                    attribute(null, TIME_RANGE_END, formatUtc(end))
+                                    attribute(null, TIME_RANGE_END, null, formatUtc(end))
                             }
                         }
                     }
                 }
             }
         }
-        serializer.endDocument()
 
         return multiStatusFlow {
             httpClient.prepareRequest(location) {
@@ -107,7 +99,7 @@ class DavCalendar(
 
                 acceptXml()
                 contentType(MIME_XML_UTF8)
-                setBody(writer.toString())
+                setBody(body)
             }
         }
     }
@@ -136,30 +128,23 @@ class DavCalendar(
                                         DAV:propname |
                                         DAV:prop)?, DAV:href+)>
         */
-        val serializer = XmlUtils.newSerializer()
-        val writer = StringWriter()
-        serializer.setOutput(writer)
-        serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", WebDAV.NS_WEBDAV)
-        serializer.setPrefix("CAL", CalDAV.NS_CALDAV)
-        serializer.insertTag(CalDAV.CalendarMultiget) {
+        val body = XmlUtils.buildDocument(listOf("" to WebDAV.NS_WEBDAV, "CAL" to CalDAV.NS_CALDAV), CalDAV.CalendarMultiget) {
             insertTag(WebDAV.Prop) {
                 insertTag(WebDAV.GetContentType)     // to determine the character set
                 insertTag(WebDAV.GetETag)
                 insertTag(CalDAV.ScheduleTag)
                 insertTag(CalDAV.CalendarData) {
                     if (contentType != null)
-                        attribute(null, CalendarData.CONTENT_TYPE, contentType)
+                        attribute(null, CalendarData.CONTENT_TYPE, null, contentType)
                     if (version != null)
-                        attribute(null, CalendarData.VERSION, version)
+                        attribute(null, CalendarData.VERSION, null, version)
                 }
             }
             for (url in urls)
                 insertTag(WebDAV.Href) {
-                    serializer.text(url.encodedPath)
+                    text(url.encodedPath)
                 }
         }
-        serializer.endDocument()
 
         return multiStatusFlow {
             httpClient.prepareRequest(location) {
@@ -167,7 +152,7 @@ class DavCalendar(
 
                 acceptXml()
                 contentType(MIME_XML_UTF8)
-                setBody(writer.toString())
+                setBody(body)
             }
         }
     }

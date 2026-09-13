@@ -12,8 +12,8 @@ package at.bitfire.dav4jvm.property.webdav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlReader
-import org.xmlpull.v1.XmlPullParser
+import at.bitfire.dav4jvm.readTextProperty
+import nl.adaptivity.xmlutil.XmlReader
 
 /**
  * Defined in RFC 5995 3.2.1 DAV:add-member Property (Protected).
@@ -26,7 +26,7 @@ data class AddMember(
 
         override fun getName() = WebDAV.AddMember
 
-        override fun create(parser: XmlPullParser) = AddMember(XmlReader(parser).readTextProperty(WebDAV.Href))
+        override fun create(parser: XmlReader) = AddMember(parser.readTextProperty(WebDAV.Href))
 
     }
 

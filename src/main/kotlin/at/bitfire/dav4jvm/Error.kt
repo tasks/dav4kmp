@@ -10,7 +10,8 @@
 
 package at.bitfire.dav4jvm
 
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.EventType
+import nl.adaptivity.xmlutil.XmlReader
 import java.io.Serializable
 
 /**
@@ -27,14 +28,14 @@ data class Error(
 
     companion object {
 
-        fun parseError(parser: XmlPullParser): List<Error> {
+        fun parseError(parser: XmlReader): List<Error> {
             val names = mutableSetOf<Property.Name>()
 
             val depth = parser.depth
             var eventType = parser.eventType
-            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
-                    names += Property.Name(parser.namespace, parser.name)
+            while (eventType != EventType.END_DOCUMENT && !(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
+                if (eventType == EventType.START_ELEMENT && parser.depth == depth + 1)
+                    names += Property.Name(parser.namespaceURI, parser.localName)
                 eventType = parser.next()
             }
 

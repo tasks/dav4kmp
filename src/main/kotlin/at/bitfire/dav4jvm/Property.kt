@@ -10,7 +10,8 @@
 
 package at.bitfire.dav4jvm
 
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.EventType
+import nl.adaptivity.xmlutil.XmlReader
 import java.io.Serializable
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -37,7 +38,7 @@ interface Property {
 
     companion object {
 
-        fun parse(parser: XmlPullParser): List<Property> {
+        fun parse(parser: XmlReader): List<Property> {
             val logger = Logger.getLogger(Property::javaClass.name)
 
             // <!ELEMENT prop ANY >
@@ -45,9 +46,9 @@ interface Property {
             val properties = ArrayList<Property>()
 
             var eventType = parser.eventType
-            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
-                    val name = Name(parser.namespace, parser.name)
+            while (eventType != EventType.END_DOCUMENT && !(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
+                if (eventType == EventType.START_ELEMENT && parser.depth == depth + 1) {
+                    val name = Name(parser.namespaceURI, parser.localName)
 
                     try {
                         val property = PropertyRegistry.create(name, parser)

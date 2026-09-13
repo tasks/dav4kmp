@@ -224,4 +224,40 @@ class HttpResponseInfoTest {
         )
     }
 
+    @Test
+    fun `responseExcerpt - XML Content-Type but not XML`() = runTest {
+        for (body in listOf("Internal Server Error", "<", "<error xmlns=\"DAV:\"><lock-token-submitted/>")) {
+            val mockEngine = MockEngine {
+                respond(
+                    status = HttpStatusCode.InternalServerError,
+                    headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Xml.toString()),
+                    content = body
+                )
+            }
+            val httpClient = HttpClient(mockEngine)
+            val response = httpClient.get(sampleUrl)
+            val result = HttpResponseInfo.fromResponse(response)
+            assertEquals(body, result.responseExcerpt)
+            assertEquals(emptyList<Error>(), result.errors)
+        }
+    }
+
+    @Test
+    fun `responseExcerpt - large XML with error elements`() = runTest {
+        val xml = "<D:error xmlns:D=\"DAV:\"><D:lock-token-submitted><D:href>/locked/</D:href></D:lock-token-submitted>" +
+                "<!-- ${"x".repeat(30*1024)} --></D:error>"
+        val mockEngine = MockEngine {
+            respond(
+                status = HttpStatusCode.Locked,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.toString()),
+                content = xml
+            )
+        }
+        val httpClient = HttpClient(mockEngine)
+        val response = httpClient.get(sampleUrl)
+        val result = HttpResponseInfo.fromResponse(response)
+        assertEquals(xml.take(HttpResponseInfo.MAX_EXCERPT_SIZE), result.responseExcerpt)
+        assertEquals(emptyList<Error>(), result.errors)
+    }
+
 }

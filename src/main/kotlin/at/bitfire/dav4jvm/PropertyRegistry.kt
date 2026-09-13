@@ -50,8 +50,8 @@ import at.bitfire.dav4jvm.property.webdav.QuotaUsedBytes
 import at.bitfire.dav4jvm.property.webdav.ResourceType
 import at.bitfire.dav4jvm.property.webdav.SupportedReportSet
 import at.bitfire.dav4jvm.property.webdav.SyncToken
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserException
+import nl.adaptivity.xmlutil.XmlException
+import nl.adaptivity.xmlutil.XmlReader
 import java.util.logging.Level
 import java.util.logging.Logger
 
@@ -138,10 +138,10 @@ object PropertyRegistry {
         }
     }
 
-    fun create(name: Property.Name, parser: XmlPullParser) =
+    fun create(name: Property.Name, parser: XmlReader) =
         try {
             factories[name]?.create(parser)
-        } catch (e: XmlPullParserException) {
+        } catch (e: XmlException) {
             logger.log(Level.WARNING, "Couldn't parse $name", e)
             null
         }

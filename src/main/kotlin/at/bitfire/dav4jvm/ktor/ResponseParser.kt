@@ -15,12 +15,14 @@ import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.ktor.Response.HrefRelation
 import at.bitfire.dav4jvm.property.webdav.ResourceType
 import at.bitfire.dav4jvm.property.webdav.WebDAV
+import at.bitfire.dav4jvm.nextText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.URLBuilder
 import io.ktor.http.Url
 import io.ktor.http.isSuccess
 import io.ktor.http.takeFrom
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.EventType
+import nl.adaptivity.xmlutil.XmlReader
 import java.util.logging.Level
 import java.util.logging.Logger
 
@@ -51,7 +53,7 @@ class ResponseParser(
      *
      * @return the parsed [MultiStatusItem.Response], or `null` if the response has no `<href>`
      */
-    fun parseResponse(parser: XmlPullParser): MultiStatusItem.Response? {
+    fun parseResponse(parser: XmlReader): MultiStatusItem.Response? {
         val depth = parser.depth
 
         var hrefOrNull: Url? = null
@@ -61,8 +63,8 @@ class ResponseParser(
         var newLocation: Url? = null
 
         var eventType = parser.eventType
-        while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-            if (eventType == XmlPullParser.START_TAG && parser.depth == depth+1)
+        while (eventType != EventType.END_DOCUMENT && !(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
+            if (eventType == EventType.START_ELEMENT && parser.depth == depth+1)
                 when (parser.propertyName()) {
                     WebDAV.Href ->
                         hrefOrNull = resolveHref(parser.nextText())

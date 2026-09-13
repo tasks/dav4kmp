@@ -13,8 +13,10 @@ package at.bitfire.dav4jvm.ktor
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.property.webdav.WebDAV
+import at.bitfire.dav4jvm.nextText
 import io.ktor.http.HttpStatusCode
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.EventType
+import nl.adaptivity.xmlutil.XmlReader
 
 object PropStatParser {
 
@@ -26,15 +28,15 @@ object PropStatParser {
      * @param parser the XML pull parser positioned at the start of the propstat element
      * @return the parsed [PropStat] object, with a default status of 200 OK if no status element is present
      */
-    fun parse(parser: XmlPullParser): PropStat {
+    fun parse(parser: XmlReader): PropStat {
         val depth = parser.depth
 
         var status: HttpStatusCode? = null
         val prop = ArrayList<Property>()
 
         var eventType = parser.eventType
-        while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
+        while (eventType != EventType.END_DOCUMENT && !(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
+            if (eventType == EventType.START_ELEMENT && parser.depth == depth + 1)
                 when (parser.propertyName()) {
                     WebDAV.Prop ->
                         prop.addAll(Property.parse(parser))

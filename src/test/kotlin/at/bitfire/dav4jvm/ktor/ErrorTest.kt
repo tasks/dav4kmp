@@ -18,14 +18,12 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.io.StringReader
 
 class ErrorTest {
 
     companion object {
         private fun parseError(xml: String): List<Error> {
-            val parser = XmlUtils.newPullParser()
-            parser.setInput(StringReader("<error xmlns='DAV:'>$xml</error>"))
+            val parser = XmlUtils.newReader("<error xmlns='DAV:'>$xml</error>")
             parser.nextTag()   // <error>
             return Error.parseError(parser)
         }

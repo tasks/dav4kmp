@@ -11,7 +11,7 @@
 package at.bitfire.dav4jvm.property.caldav
 
 import at.bitfire.dav4jvm.property.common.HrefListProperty
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.XmlReader
 
 class Source(
     override val hrefs: List<String> = emptyList()
@@ -21,7 +21,7 @@ class Source(
 
         override fun getName() = CalDAV.Source
 
-        override fun create(parser: XmlPullParser) = create(parser, ::Source)
+        override fun create(parser: XmlReader) = create(parser, ::Source)
 
     }
 

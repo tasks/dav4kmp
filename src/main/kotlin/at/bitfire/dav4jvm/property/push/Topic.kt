@@ -12,8 +12,8 @@ package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlReader
-import org.xmlpull.v1.XmlPullParser
+import at.bitfire.dav4jvm.readText
+import nl.adaptivity.xmlutil.XmlReader
 
 /**
  * Represents a [NS_WEBDAV_PUSH]`:topic` property.
@@ -28,8 +28,8 @@ data class Topic(
 
         override fun getName() = WebDAVPush.Topic
 
-        override fun create(parser: XmlPullParser): Topic =
-            Topic(XmlReader(parser).readText())
+        override fun create(parser: XmlReader): Topic =
+            Topic(parser.readText())
 
     }
 

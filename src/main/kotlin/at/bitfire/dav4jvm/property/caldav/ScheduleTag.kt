@@ -13,10 +13,10 @@ package at.bitfire.dav4jvm.property.caldav
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.QuotedStringUtils
-import at.bitfire.dav4jvm.XmlReader
+import at.bitfire.dav4jvm.readText
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.HttpHeaders
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.XmlReader
 
 data class ScheduleTag(
     val rawScheduleTag: String?
@@ -41,7 +41,7 @@ data class ScheduleTag(
 
         override fun getName() = CalDAV.ScheduleTag
 
-        override fun create(parser: XmlPullParser) = ScheduleTag(XmlReader(parser).readText())
+        override fun create(parser: XmlReader) = ScheduleTag(parser.readText())
 
     }
 

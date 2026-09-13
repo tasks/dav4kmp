@@ -12,10 +12,10 @@ package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlReader
+import at.bitfire.dav4jvm.readText
 import io.ktor.http.Url
 import io.ktor.http.parseUrl
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.XmlReader
 
 /**
  * Represents a [NS_WEBDAV_PUSH]`:push-resource` property.
@@ -34,9 +34,9 @@ data class PushResource(
 
         override fun getName() = WebDAVPush.PushResource
 
-        override fun create(parser: XmlPullParser): PushResource =
+        override fun create(parser: XmlReader): PushResource =
             PushResource(
-                uri = XmlReader(parser).readText()?.let { parseUrl(it) }
+                uri = parser.readText()?.let { parseUrl(it) }
             )
 
     }

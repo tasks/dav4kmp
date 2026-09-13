@@ -14,17 +14,15 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.property.webdav.DisplayName
 import at.bitfire.dav4jvm.property.webdav.GetETag
+import nl.adaptivity.xmlutil.EventType
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import org.xmlpull.v1.XmlPullParser
-import java.io.StringReader
 
 class PropertyTest {
 
     companion object {
         private fun parseProperty(xml: String): List<Property> {
-            val parser = XmlUtils.newPullParser()
-            parser.setInput(StringReader("<test>$xml</test>"))
+            val parser = XmlUtils.newReader("<test>$xml</test>")
             parser.nextTag()    // move into <test>
             return Property.parse(parser)
         }
@@ -33,13 +31,12 @@ class PropertyTest {
 
     @Test
     fun testParse_emptyElement() {
-        val parser = XmlUtils.newPullParser()
-        parser.setInput(StringReader("<test xmlns='DAV:'></test>"))
+        val parser = XmlUtils.newReader("<test xmlns='DAV:'></test>")
         parser.nextTag()
         val result = Property.parse(parser)
         assertEquals(0, result.size)
-        assertEquals(XmlPullParser.END_TAG, parser.eventType)
-        assertEquals("test", parser.name)
+        assertEquals(EventType.END_ELEMENT, parser.eventType)
+        assertEquals("test", parser.localName)
     }
 
     @Test

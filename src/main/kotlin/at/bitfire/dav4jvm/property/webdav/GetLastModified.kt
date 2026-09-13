@@ -12,8 +12,8 @@ package at.bitfire.dav4jvm.property.webdav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlReader
-import org.xmlpull.v1.XmlPullParser
+import at.bitfire.dav4jvm.readHttpDate
+import nl.adaptivity.xmlutil.XmlReader
 import kotlin.time.Instant
 
 data class GetLastModified(
@@ -24,10 +24,10 @@ data class GetLastModified(
 
         override fun getName() = WebDAV.GetLastModified
 
-        override fun create(parser: XmlPullParser): GetLastModified {
+        override fun create(parser: XmlReader): GetLastModified {
             // <!ELEMENT getlastmodified (#PCDATA) >
             return GetLastModified(
-                XmlReader(parser).readHttpDate()
+                parser.readHttpDate()
             )
         }
 

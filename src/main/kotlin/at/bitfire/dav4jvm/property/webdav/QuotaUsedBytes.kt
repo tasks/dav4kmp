@@ -12,8 +12,8 @@ package at.bitfire.dav4jvm.property.webdav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlReader
-import org.xmlpull.v1.XmlPullParser
+import at.bitfire.dav4jvm.readLong
+import nl.adaptivity.xmlutil.XmlReader
 
 data class QuotaUsedBytes(
     val quotaUsedBytes: Long?
@@ -23,8 +23,8 @@ data class QuotaUsedBytes(
 
         override fun getName() = WebDAV.QuotaUsedBytes
 
-        override fun create(parser: XmlPullParser) =
-            QuotaUsedBytes(XmlReader(parser).readLong())
+        override fun create(parser: XmlReader) =
+            QuotaUsedBytes(parser.readLong())
 
     }
 
