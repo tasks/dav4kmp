@@ -26,19 +26,35 @@ val jitpackVersion: String? = System.getenv("VERSION")
 version = if (jitpackVersion?.isSemVer() == true) jitpackVersion else gitCommit ?: "SNAPSHOT"
 
 plugins {
-    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.multiplatform)
     `maven-publish`
 
     alias(libs.plugins.dokka)
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            from(components["java"])
+kotlin {
+    jvm()
+    iosArm64()
+    iosSimulatorArm64()
+
+    sourceSets {
+        commonMain.dependencies {
+            api(libs.kotlin.coroutines.core)
+            api(libs.ktor.client.core)
+            api(libs.xmlutil.core)
+
+            implementation(libs.ktor.client.auth)
+            implementation(libs.ktor.client.encoding)
+        }
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+            implementation(libs.kotlin.coroutines.test)
+            implementation(libs.ktor.client.mock)
         }
     }
+}
 
+publishing {
     repositories {
         maven {
             name = "dav4jvm"
@@ -58,17 +74,4 @@ tasks.withType<DokkaTask>().configureEach {
             }
         }
     }
-}
-
-dependencies {
-    api(libs.kotlin.coroutines.core)
-    api(libs.ktor.client.core)
-    api(libs.xmlutil.core)
-
-    implementation(libs.ktor.client.auth)
-    implementation(libs.ktor.client.encoding)
-
-    testImplementation(libs.junit4)
-    testImplementation(libs.kotlin.coroutines.test)
-    testImplementation(libs.ktor.client.mock)
 }

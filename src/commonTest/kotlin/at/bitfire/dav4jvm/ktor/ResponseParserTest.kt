@@ -1,0 +1,247 @@
+/*
+ * Copyright © All Contributors. See LICENSE and AUTHORS in the root directory for details.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
+package at.bitfire.dav4jvm.ktor
+
+import at.bitfire.dav4jvm.XmlUtils
+import io.ktor.http.Url
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+
+class ResponseParserTest {
+
+    private val baseUrl = Url("http://www.example.com/container/")
+    private val parser = ResponseParser(baseUrl)
+
+
+    @Test
+    fun `parseResponse relation=SELF`() {
+        val xml = XmlUtils.newReader("<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                "<multistatus xmlns=\"DAV:\">\n" +
+                "<response>\n" +
+                "  <href>http://www.example.com/container/</href>\n" +
+                "  <propstat>\n" +
+                "    <prop xmlns:R=\"http://ns.example.com/boxschema/\">\n" +
+                "      <R:bigbox/>\n" +
+                "      <R:author/>\n" +
+                "      <creationdate/>\n" +
+                "      <displayname/>\n" +
+                "      <resourcetype/>\n" +
+                "      <supportedlock/>\n" +
+                "    </prop>\n" +
+                "    <status>HTTP/1.1 200 OK</status>\n" +
+                "  </propstat>\n" +
+                "</response>"
+        )
+        xml.nextTag()   // multistatus
+        xml.nextTag()   // response
+        val item = parser.parseResponse(xml)
+        item as MultiStatusItem.Response
+        assertEquals(Url("http://www.example.com/container/"), item.response.href)
+        assertEquals(Response.HrefRelation.SELF, item.relation)
+    }
+
+    @Test
+    fun `parseResponse relation=MEMBER`() {
+        val xml = XmlUtils.newReader("<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                "<multistatus xmlns=\"DAV:\">\n" +
+                "<response>\n" +
+                "  <href>http://www.example.com/container/front.html</href>\n" +
+                "  <propstat>\n" +
+                "    <prop xmlns:R=\"http://ns.example.com/boxschema/\">\n" +
+                "      <R:bigbox/>\n" +
+                "      <creationdate/>\n" +
+                "      <displayname/>\n" +
+                "      <getcontentlength/>\n" +
+                "      <getcontenttype/>\n" +
+                "      <getetag/>\n" +
+                "      <getlastmodified/>\n" +
+                "      <resourcetype/>\n" +
+                "      <supportedlock/>\n" +
+                "    </prop>\n" +
+                "    <status>HTTP/1.1 200 OK</status>\n" +
+                "  </propstat>\n" +
+                "</response>"
+        )
+        xml.nextTag()   // multistatus
+        xml.nextTag()   // response
+        val item = parser.parseResponse(xml)
+        item as MultiStatusItem.Response
+        assertEquals(Url("http://www.example.com/container/front.html"), item.response.href)
+        assertEquals(Response.HrefRelation.MEMBER, item.relation)
+    }
+
+    @Test
+    fun `parseResponse relation=OTHER`() {
+        val xml = XmlUtils.newReader("<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                "<multistatus xmlns=\"DAV:\">\n" +
+                "<response>\n" +
+                "  <href>http://other.example.com/was-not-requested</href>\n" +
+                "  <propstat>\n" +
+                "    <prop xmlns:R=\"http://ns.example.com/boxschema/\">\n" +
+                "      <R:bigbox/>\n" +
+                "      <creationdate/>\n" +
+                "      <displayname/>\n" +
+                "      <getcontentlength/>\n" +
+                "      <getcontenttype/>\n" +
+                "      <getetag/>\n" +
+                "      <getlastmodified/>\n" +
+                "      <resourcetype/>\n" +
+                "      <supportedlock/>\n" +
+                "    </prop>\n" +
+                "    <status>HTTP/1.1 200 OK</status>\n" +
+                "  </propstat>\n" +
+                "</response>"
+        )
+        xml.nextTag()   // multistatus
+        xml.nextTag()   // response
+        val item = parser.parseResponse(xml)
+        item as MultiStatusItem.Response
+        assertEquals(Url("http://other.example.com/was-not-requested"), item.response.href)
+        assertEquals(Response.HrefRelation.OTHER, item.relation)
+    }
+
+    @Test
+    fun `parseResponse collection href gets trailing slash`() {
+        val xml = XmlUtils.newReader(
+                "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                        "<multistatus xmlns=\"DAV:\">\n" +
+                        "<response>\n" +
+                        "  <href>http://www.example.com/container</href>\n" +
+                        "  <propstat>\n" +
+                        "    <prop>\n" +
+                        "      <resourcetype><collection/></resourcetype>\n" +
+                        "    </prop>\n" +
+                        "    <status>HTTP/1.1 200 OK</status>\n" +
+                        "  </propstat>\n" +
+                        "</response>"
+            )
+        xml.nextTag()   // multistatus
+        xml.nextTag()   // response
+        val item = parser.parseResponse(xml)
+        item as MultiStatusItem.Response
+        assertEquals(Url("http://www.example.com/container/"), item.response.href)
+        assertEquals(Response.HrefRelation.SELF, item.relation)
+    }
+
+    @Test
+    fun `parseResponse non-collection href unchanged`() {
+        val xml = XmlUtils.newReader(
+                "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                        "<multistatus xmlns=\"DAV:\">\n" +
+                        "<response>\n" +
+                        "  <href>http://www.example.com/container/file.txt</href>\n" +
+                        "  <propstat>\n" +
+                        "    <prop>\n" +
+                        "      <resourcetype/>\n" +
+                        "    </prop>\n" +
+                        "    <status>HTTP/1.1 200 OK</status>\n" +
+                        "  </propstat>\n" +
+                        "</response>"
+            )
+        xml.nextTag()   // multistatus
+        xml.nextTag()   // response
+        val item = parser.parseResponse(xml)
+        item as MultiStatusItem.Response
+        assertEquals(Url("http://www.example.com/container/file.txt"), item.response.href)
+    }
+
+    @Test
+    fun `parseResponse href and status with unknown entity`() {
+        val xml = XmlUtils.newReader("<multistatus xmlns=\"DAV:\">\n" +
+                "<response>\n" +
+                "  <href>/container/Team&nbsp;Cal/</href>\n" +
+                "  <status>HTTP/1.1 200 OK&nbsp;</status>\n" +
+                "</response>"
+        )
+        xml.nextTag()   // multistatus
+        xml.nextTag()   // response
+        val item = parser.parseResponse(xml)
+        item as MultiStatusItem.Response
+        assertEquals(Url("http://www.example.com/container/TeamCal/"), item.response.href)
+        assertEquals(200, item.response.status?.value)
+    }
+
+    @Test
+    fun `parseResponse without href returns null`() {
+        val xml = XmlUtils.newReader(
+                "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                        "<multistatus xmlns=\"DAV:\">\n" +
+                        "<response>\n" +
+                        "  <propstat>\n" +
+                        "    <prop><resourcetype/></prop>\n" +
+                        "    <status>HTTP/1.1 200 OK</status>\n" +
+                        "  </propstat>\n" +
+                        "</response>"
+            )
+        xml.nextTag()   // multistatus
+        xml.nextTag()   // response
+        assertNull(parser.parseResponse(xml))
+    }
+
+    @Test
+    fun `parseResponse multiple propstats`() {
+        val xml = XmlUtils.newReader(
+                "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                        "<multistatus xmlns=\"DAV:\">\n" +
+                        "<response>\n" +
+                        "  <href>http://www.example.com/container/member.txt</href>\n" +
+                        "  <propstat>\n" +
+                        "    <prop><getetag>\"abc\"</getetag></prop>\n" +
+                        "    <status>HTTP/1.1 200 OK</status>\n" +
+                        "  </propstat>\n" +
+                        "  <propstat>\n" +
+                        "    <prop><displayname/></prop>\n" +
+                        "    <status>HTTP/1.1 404 Not Found</status>\n" +
+                        "  </propstat>\n" +
+                        "</response>"
+            )
+        xml.nextTag()   // multistatus
+        xml.nextTag()   // response
+        val item = parser.parseResponse(xml)
+        item as MultiStatusItem.Response
+        assertEquals(2, item.response.propstat.size)
+    }
+
+
+    @Test
+    fun `resolveHref with absolute URL`() {
+        assertEquals(
+            Url("http://www.example.com/container/member"),
+            parser.resolveHref("http://www.example.com/container/member")
+        )
+    }
+
+    @Test
+    fun `resolveHref with absolute path`() {
+        assertEquals(
+            Url("http://www.example.com/container/member"),
+            parser.resolveHref("/container/member")
+        )
+    }
+
+    @Test
+    fun `resolveHref with relative path`() {
+        assertEquals(
+            Url("http://www.example.com/container/member"),
+            parser.resolveHref("member")
+        )
+    }
+
+    @Test
+    fun `resolveHref with relative path with colon`() {
+        assertEquals(
+            Url("http://www.example.com/container/mem:ber"),
+            parser.resolveHref("mem:ber")
+        )
+    }
+
+}
