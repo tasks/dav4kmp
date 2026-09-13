@@ -15,19 +15,19 @@ repositories {
     mavenCentral()
 }
 
-/** Checks whether this string is a valid semver: `X.Y.Z` */
-fun String.isSemVer(): Boolean = "\\d+.\\d+.\\d+".toRegex().matches(this)
+/** Checks whether this string is a valid semver: `X.Y.Z` with an optional pre-release suffix like `-alpha01` */
+fun String.isSemVer(): Boolean = "\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.]+)?".toRegex().matches(this)
 
-group="com.github.bitfireAT"
+group = "org.tasks"
 
-// set by jitpack.io
-val gitCommit: String? = System.getenv("GIT_COMMIT")
-val jitpackVersion: String? = System.getenv("VERSION")
-version = if (jitpackVersion?.isSemVer() == true) jitpackVersion else gitCommit ?: "SNAPSHOT"
+val releaseVersion: String? = System.getenv("DAV4JVM_VERSION")
+if (releaseVersion != null)
+    require(releaseVersion.isSemVer()) { "DAV4JVM_VERSION must be X.Y.Z or X.Y.Z-suffix, not \"$releaseVersion\"" }
+version = releaseVersion ?: "SNAPSHOT"
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
-    `maven-publish`
+    alias(libs.plugins.maven.publish)
 
     alias(libs.plugins.dokka)
 }
@@ -54,10 +54,50 @@ kotlin {
     }
 }
 
+mavenPublishing {
+    publishToMavenCentral(automaticRelease = true)
+    signAllPublications()
+
+    coordinates(group.toString(), "dav4kmp", version.toString())
+
+    pom {
+        name.set("dav4kmp")
+        description.set("WebDAV/CalDAV/CardDAV library for Kotlin Multiplatform (JVM/Android and iOS)")
+        url.set("https://github.com/tasks/dav4kmp")
+        inceptionYear.set("2015")
+
+        licenses {
+            license {
+                name.set("Mozilla Public License, Version 2.0")
+                url.set("https://mozilla.org/MPL/2.0/")
+            }
+        }
+
+        developers {
+            developer {
+                id.set("bitfireAT")
+                name.set("bitfire web engineering GmbH")
+                url.set("https://www.bitfire.at")
+            }
+            developer {
+                id.set("abaker")
+                name.set("Alex Baker")
+                url.set("https://tasks.org")
+            }
+        }
+
+        scm {
+            url.set("https://github.com/tasks/dav4kmp")
+            connection.set("scm:git:https://github.com/tasks/dav4kmp.git")
+            developerConnection.set("scm:git:git@github.com:tasks/dav4kmp.git")
+        }
+    }
+}
+
 publishing {
     repositories {
         maven {
-            name = "dav4jvm"
+            name = "dav4kmp"
             url = uri(layout.buildDirectory.dir("repo"))
         }
     }

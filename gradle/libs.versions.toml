@@ -3,6 +3,7 @@ dokka = "2.2.0"
 # don't upgrade to Kotlin 2.4 until Hilt > 2.59.2 fixes the metadata problem (https://github.com/google/dagger/issues/5177)
 kotlin = "2.4.20"
 kotlin-coroutines = "1.11.0"
+maven-publish = "0.37.0"
 ktor = "3.5.2"
 xmlutil = "1.0.2"
 
@@ -18,3 +19,4 @@ xmlutil-core = { module = "io.github.pdvrieze.xmlutil:core", version.ref = "xmlu
 [plugins]
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "maven-publish" }

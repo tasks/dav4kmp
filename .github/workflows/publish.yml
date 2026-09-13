@@ -1,0 +1,38 @@
+name: Publish to Maven Central
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (X.Y.Z or X.Y.Z-suffix; X.Y.Z-SNAPSHOT uploads to the snapshot repository)'
+        required: true
+
+jobs:
+  publish:
+    name: Publish ${{ github.ref_name }}
+    runs-on: macos-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v6.3.0
+
+      - name: Build and test
+        run: ./gradlew check
+        env:
+          DAV4JVM_VERSION: ${{ inputs.version || github.ref_name }}
+
+      - name: Publish
+        run: ./gradlew publishToMavenCentral --no-configuration-cache
+        env:
+          DAV4JVM_VERSION: ${{ inputs.version || github.ref_name }}
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
