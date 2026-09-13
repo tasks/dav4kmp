@@ -13,13 +13,12 @@ package at.bitfire.dav4jvm
 import io.ktor.http.fromHttpToGmtDate
 import io.ktor.http.toHttpDate
 import io.ktor.util.date.GMTDate
-import java.util.logging.Logger
+import io.ktor.util.logging.KtorSimpleLogger
 import kotlin.time.Instant
 
 object HttpUtils {
 
-    private val logger
-        get() = Logger.getLogger(javaClass.name)
+    private val logger = KtorSimpleLogger("at.bitfire.dav4jvm.HttpUtils")
 
     /**
      * Formats a date for use in HTTP headers (RFC 7231 IMF-fixdate).
@@ -45,7 +44,7 @@ object HttpUtils {
         val ts = dateStr.fromHttpToGmtDate().timestamp
         Instant.fromEpochMilliseconds(ts)
     } catch (_: Exception) {
-        logger.warning("Couldn't parse HTTP date: $dateStr, ignoring")
+        logger.warn("Couldn't parse HTTP date: $dateStr, ignoring")
         null
     }
 

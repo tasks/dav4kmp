@@ -26,15 +26,16 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.Url
 import io.ktor.http.contentType
 import io.ktor.util.date.GMTDate
+import io.ktor.util.logging.KtorSimpleLogger
+import io.ktor.util.logging.Logger
 import kotlinx.coroutines.flow.Flow
-import java.util.logging.Logger
 import kotlin.time.Instant
 
 @Suppress("unused")
 class DavCalendar(
     httpClient: HttpClient,
     location: Url,
-    logger: Logger = Logger.getLogger(javaClass.name)
+    logger: Logger = KtorSimpleLogger("at.bitfire.dav4jvm.DavCalendar")
 ): DavCollection(httpClient, location, logger) {
 
     /**

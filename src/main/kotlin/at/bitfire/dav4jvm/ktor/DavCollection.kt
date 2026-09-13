@@ -22,8 +22,9 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.Url
 import io.ktor.http.contentType
+import io.ktor.util.logging.KtorSimpleLogger
+import io.ktor.util.logging.Logger
 import kotlinx.coroutines.flow.Flow
-import java.util.logging.Logger
 
 /**
  * Represents a WebDAV collection.
@@ -31,7 +32,7 @@ import java.util.logging.Logger
 open class DavCollection @JvmOverloads constructor(
     httpClient: HttpClient,
     location: Url,
-    logger: Logger = Logger.getLogger(javaClass.name)
+    logger: Logger = KtorSimpleLogger("at.bitfire.dav4jvm.DavCollection")
 ): DavResource(httpClient, location, logger) {
 
     /**

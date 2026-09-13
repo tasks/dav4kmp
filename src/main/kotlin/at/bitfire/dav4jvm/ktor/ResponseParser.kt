@@ -21,10 +21,9 @@ import io.ktor.http.URLBuilder
 import io.ktor.http.Url
 import io.ktor.http.isSuccess
 import io.ktor.http.takeFrom
+import io.ktor.util.logging.KtorSimpleLogger
 import nl.adaptivity.xmlutil.EventType
 import nl.adaptivity.xmlutil.XmlReader
-import java.util.logging.Level
-import java.util.logging.Logger
 
 /**
  * Parses a `<response>` XML element of a multistatus response.
@@ -35,8 +34,7 @@ class ResponseParser(
     private val location: Url
 ) {
 
-    private val logger
-        get() = Logger.getLogger(javaClass.name)
+    private val logger = KtorSimpleLogger("at.bitfire.dav4jvm.ResponseParser")
 
     /**
      * Parses an XML response element and returns the [MultiStatusItem.Response] for it, or `null`
@@ -81,7 +79,7 @@ class ResponseParser(
         }
 
         if (hrefOrNull == null) {
-            logger.warning("Ignoring XML response element without valid href")
+            logger.warn("Ignoring XML response element without valid href")
             return null
         }
         var href: Url = hrefOrNull      // guaranteed to be not null
@@ -169,7 +167,7 @@ class ResponseParser(
         val urlBuilder = try {
             URLBuilder(location).takeFrom(sHref)
         } catch (e: Exception) {
-            logger.log(Level.WARNING, "Unresolvable <href> in <response>: $hrefString", e)
+            logger.warn("Unresolvable <href> in <response>: $hrefString", e)
             return null
         }
 

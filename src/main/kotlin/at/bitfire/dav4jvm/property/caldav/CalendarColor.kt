@@ -13,9 +13,8 @@ package at.bitfire.dav4jvm.property.caldav
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.readText
+import io.ktor.util.logging.KtorSimpleLogger
 import nl.adaptivity.xmlutil.XmlReader
-import java.util.logging.Level
-import java.util.logging.Logger
 
 data class CalendarColor(
     val color: Int?
@@ -55,8 +54,8 @@ data class CalendarColor(
                 try {
                     return CalendarColor(parseARGBColor(it))
                 } catch (e: IllegalArgumentException) {
-                    val logger = Logger.getLogger(javaClass.name)
-                    logger.log(Level.WARNING, "Couldn't parse color, ignoring", e)
+                    val logger = KtorSimpleLogger("at.bitfire.dav4jvm.CalendarColor")
+                    logger.warn("Couldn't parse color, ignoring", e)
                 }
             }
             return CalendarColor(null)

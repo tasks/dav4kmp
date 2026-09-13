@@ -47,6 +47,8 @@ import io.ktor.http.contentType
 import io.ktor.http.isSecure
 import io.ktor.http.isSuccess
 import io.ktor.http.withCharset
+import io.ktor.util.logging.KtorSimpleLogger
+import io.ktor.util.logging.Logger
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.charsets.Charsets
 import io.ktor.utils.io.peek
@@ -57,8 +59,6 @@ import kotlinx.io.IOException
 import kotlinx.io.bytestring.encodeToByteString
 import nl.adaptivity.xmlutil.EventType
 import nl.adaptivity.xmlutil.XmlException
-import java.util.logging.Level
-import java.util.logging.Logger
 
 /**
  * Represents a WebDAV resource at the given location and allows WebDAV
@@ -81,7 +81,7 @@ import java.util.logging.Logger
 open class DavResource(
     protected val httpClient: HttpClient,
     location: Url,
-    protected val logger: Logger = Logger.getLogger(javaClass.name)
+    protected val logger: Logger = KtorSimpleLogger("at.bitfire.dav4jvm.DavResource")
 ) {
 
     companion object {
@@ -671,7 +671,7 @@ open class DavResource(
 
         val contentType = httpResponse.contentType()
         if (contentType == null) {
-            logger.warning("Received 207 Multi-Status without Content-Type, assuming XML")
+            logger.warn("Received 207 Multi-Status without Content-Type, assuming XML")
             return  // supposed XML response body, fine
         }
 
@@ -684,11 +684,11 @@ open class DavResource(
         try {
             val firstBytes = bodyChannel.peek(XML_SIGNATURE.size)
             if (firstBytes == XML_SIGNATURE) {
-                logger.warning("Received 207 Multi-Status that seems to be XML but has MIME type $contentType")
+                logger.warn("Received 207 Multi-Status that seems to be XML but has MIME type $contentType")
                 return  // response body starts with XML signature, fine
             }
         } catch (e: Exception) {
-            logger.log(Level.WARNING, "Couldn't scan for XML signature", e)
+            logger.warn("Couldn't scan for XML signature", e)
         }
 
         // non-XML response body
