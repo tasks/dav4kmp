@@ -10,7 +10,6 @@
 
 package at.bitfire.dav4jvm
 
-import io.ktor.util.logging.KtorSimpleLogger
 
 /**
  * Represents a WebDAV property.
@@ -35,7 +34,7 @@ interface Property {
     companion object {
 
         fun parse(parser: XmlPullParser): List<Property> {
-            val logger = KtorSimpleLogger("at.bitfire.dav4jvm.Property")
+            val logger = Logger.getLogger("at.bitfire.dav4jvm.Property")
 
             // <!ELEMENT prop ANY >
             val depth = parser.depth
@@ -52,9 +51,9 @@ interface Property {
                         if (property != null) {
                             properties.add(property)
                         } else
-                            logger.debug("Ignoring unknown property $name")
+                            logger.fine("Ignoring unknown property $name")
                     } catch (e: Exception) {     // catching generic exception here to avoid a dependency on a specific HTTP library's exception type
-                        logger.warn("Ignoring invalid property", e)
+                        logger.log(Level.WARNING, "Ignoring invalid property", e)
                     }
                 }
 

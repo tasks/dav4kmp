@@ -14,7 +14,6 @@ import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.property.caldav.SupportedCalendarData.Companion.CONTENT_TYPE
 import at.bitfire.dav4jvm.property.caldav.SupportedCalendarData.Companion.VERSION
 import io.ktor.http.ContentType
-import io.ktor.util.logging.KtorSimpleLogger
 import kotlinx.io.IOException
 import kotlin.time.Instant
 
@@ -126,8 +125,8 @@ class XmlReader(
             if (date != null)
                 date
             else {
-                val logger = KtorSimpleLogger("at.bitfire.dav4jvm.XmlReader")
-                logger.warn("Couldn't parse HTTP-date")
+                val logger = Logger.getLogger("at.bitfire.dav4jvm.XmlReader")
+                logger.warning("Couldn't parse HTTP-date")
                 null
             }
         }
@@ -144,8 +143,8 @@ class XmlReader(
             try {
                 valueStr.toLong()
             } catch(e: NumberFormatException) {
-                val logger = KtorSimpleLogger("at.bitfire.dav4jvm.XmlReader")
-                logger.warn("Couldn't parse as Long: $valueStr", e)
+                val logger = Logger.getLogger("at.bitfire.dav4jvm.XmlReader")
+                logger.log(Level.WARNING, "Couldn't parse as Long: $valueStr", e)
                 null
             }
         }
@@ -170,8 +169,8 @@ class XmlReader(
                 }
             }
         } catch(e: XmlPullParserException) {
-            val logger = KtorSimpleLogger("at.bitfire.dav4jvm.XmlReader")
-            logger.error("Couldn't parse content types", e)
+            val logger = Logger.getLogger("at.bitfire.dav4jvm.XmlReader")
+            logger.log(Level.SEVERE, "Couldn't parse content types", e)
         }
     }
 

@@ -50,12 +50,12 @@ import at.bitfire.dav4jvm.property.webdav.QuotaUsedBytes
 import at.bitfire.dav4jvm.property.webdav.ResourceType
 import at.bitfire.dav4jvm.property.webdav.SupportedReportSet
 import at.bitfire.dav4jvm.property.webdav.SyncToken
-import io.ktor.util.logging.KtorSimpleLogger
 
 object PropertyRegistry {
 
     private val factories = mutableMapOf<Property.Name, PropertyFactory>()
-    private val logger = KtorSimpleLogger("at.bitfire.dav4jvm.PropertyRegistry")
+    private val logger
+        get() = Logger.getLogger("at.bitfire.dav4jvm.PropertyRegistry")
 
 
     init {
@@ -118,7 +118,7 @@ object PropertyRegistry {
      * @param factory property factory to be registered
      */
     fun register(factory: PropertyFactory) {
-        logger.debug("Registering ${factory::class.qualifiedName} for ${factory.getName()}")
+        logger.fine("Registering ${factory::class.qualifiedName} for ${factory.getName()}")
         factories[factory.getName()] = factory
     }
 
@@ -138,7 +138,7 @@ object PropertyRegistry {
         try {
             factories[name]?.create(parser)
         } catch (e: XmlPullParserException) {
-            logger.warn("Couldn't parse $name", e)
+            logger.log(Level.WARNING, "Couldn't parse $name", e)
             null
         }
 

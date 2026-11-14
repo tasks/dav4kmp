@@ -10,6 +10,7 @@
 
 package at.bitfire.dav4jvm.ktor
 
+import at.bitfire.dav4jvm.Logger
 import at.bitfire.dav4jvm.StringWriter
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.insertTag
@@ -25,14 +26,12 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.Url
 import io.ktor.http.contentType
-import io.ktor.util.logging.KtorSimpleLogger
-import io.ktor.util.logging.Logger
 import kotlinx.coroutines.flow.Flow
 
 class DavAddressBook(
     httpClient: HttpClient,
     location: Url,
-    logger: Logger = KtorSimpleLogger("at.bitfire.dav4jvm.DavAddressBook")
+    logger: Logger = Logger.getLogger("at.bitfire.dav4jvm.ktor.DavAddressBook")
 ) : DavCollection(httpClient, location, logger) {
 
     /**

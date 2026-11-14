@@ -10,6 +10,8 @@
 
 package at.bitfire.dav4jvm.ktor
 
+import at.bitfire.dav4jvm.Level
+import at.bitfire.dav4jvm.Logger
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.StringWriter
 import at.bitfire.dav4jvm.XmlPullParser
@@ -51,8 +53,6 @@ import io.ktor.http.contentType
 import io.ktor.http.isSecure
 import io.ktor.http.isSuccess
 import io.ktor.http.withCharset
-import io.ktor.util.logging.KtorSimpleLogger
-import io.ktor.util.logging.Logger
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.charsets.Charsets
 import io.ktor.utils.io.peek
@@ -87,7 +87,7 @@ import kotlinx.io.bytestring.encodeToByteString
 open class DavResource(
     protected val httpClient: HttpClient,
     location: Url,
-    protected val logger: Logger = KtorSimpleLogger("at.bitfire.dav4jvm.DavResource")
+    protected val logger: Logger = Logger.getLogger("at.bitfire.dav4jvm.ktor.DavResource")
 ) {
 
     companion object {
@@ -694,7 +694,7 @@ open class DavResource(
 
         val contentType = httpResponse.contentType()
         if (contentType == null) {
-            logger.warn("Received 207 Multi-Status without Content-Type, assuming XML")
+            logger.warning("Received 207 Multi-Status without Content-Type, assuming XML")
             return  // supposed XML response body, fine
         }
 
@@ -707,11 +707,11 @@ open class DavResource(
         try {
             val firstBytes = bodyChannel.peek(XML_SIGNATURE.size)
             if (firstBytes == XML_SIGNATURE) {
-                logger.warn("Received 207 Multi-Status that seems to be XML but has MIME type $contentType")
+                logger.warning("Received 207 Multi-Status that seems to be XML but has MIME type $contentType")
                 return  // response body starts with XML signature, fine
             }
         } catch (e: Exception) {
-            logger.warn("Couldn't scan for XML signature", e)
+            logger.log(Level.WARNING, "Couldn't scan for XML signature", e)
         }
 
         // non-XML response body

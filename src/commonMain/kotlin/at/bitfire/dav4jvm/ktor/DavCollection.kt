@@ -10,6 +10,7 @@
 
 package at.bitfire.dav4jvm.ktor
 
+import at.bitfire.dav4jvm.Logger
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.StringWriter
 import at.bitfire.dav4jvm.XmlUtils
@@ -23,8 +24,6 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.Url
 import io.ktor.http.contentType
-import io.ktor.util.logging.KtorSimpleLogger
-import io.ktor.util.logging.Logger
 import kotlinx.coroutines.flow.Flow
 import kotlin.jvm.JvmOverloads
 
@@ -34,7 +33,7 @@ import kotlin.jvm.JvmOverloads
 open class DavCollection @JvmOverloads constructor(
     httpClient: HttpClient,
     location: Url,
-    logger: Logger = KtorSimpleLogger("at.bitfire.dav4jvm.DavCollection")
+    logger: Logger = Logger.getLogger("at.bitfire.dav4jvm.ktor.DavCollection")
 ): DavResource(httpClient, location, logger) {
 
     /**

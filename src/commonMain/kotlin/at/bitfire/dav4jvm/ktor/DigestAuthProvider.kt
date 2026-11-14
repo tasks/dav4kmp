@@ -10,6 +10,7 @@
 
 package at.bitfire.dav4jvm.ktor
 
+import at.bitfire.dav4jvm.Logger
 import at.bitfire.dav4jvm.QuotedStringUtils
 import io.ktor.client.plugins.auth.AuthProvider
 import io.ktor.client.request.HttpRequestBuilder
@@ -18,7 +19,6 @@ import io.ktor.http.auth.AuthScheme
 import io.ktor.http.auth.HttpAuthHeader
 import io.ktor.http.encodedPath
 import io.ktor.http.fullPath
-import io.ktor.util.logging.KtorSimpleLogger
 import kotlin.concurrent.Volatile
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -136,21 +136,21 @@ class DigestAuthProvider internal constructor(
             return null
 
         val realm = auth.parameter("realm") ?: run {
-            logger.debug("Ignoring Digest challenge without realm")
+            logger.fine("Ignoring Digest challenge without realm")
             return null
         }
         val nonce = auth.parameter("nonce") ?: run {
-            logger.debug("Ignoring Digest challenge without nonce")
+            logger.fine("Ignoring Digest challenge without nonce")
             return null
         }
         val algorithmToken = auth.parameter("algorithm") ?: Algorithm.MD5.token
         val algorithm = Algorithm.byToken(algorithmToken) ?: run {
-            logger.debug("Ignoring Digest challenge with unsupported algorithm $algorithmToken")
+            logger.fine("Ignoring Digest challenge with unsupported algorithm $algorithmToken")
             return null
         }
         val qop = auth.parameter("qop")?.let { offered ->
             offered.split(',').map { it.trim() }.firstOrNull { it.equals("auth", ignoreCase = true) } ?: run {
-                logger.debug("Ignoring Digest challenge with unsupported qop $offered")
+                logger.fine("Ignoring Digest challenge with unsupported qop $offered")
                 return null
             }
         }
@@ -167,7 +167,7 @@ class DigestAuthProvider internal constructor(
 
     companion object {
 
-        private val logger = KtorSimpleLogger("at.bitfire.dav4jvm.DigestAuthProvider")
+        private val logger = Logger.getLogger("at.bitfire.dav4jvm.ktor.DigestAuthProvider")
 
         private fun generateCnonce() = secureRandomBytes(16).toHexString()
 

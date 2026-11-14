@@ -11,6 +11,8 @@
 package at.bitfire.dav4jvm.ktor
 
 import at.bitfire.dav4jvm.Error
+import at.bitfire.dav4jvm.Level
+import at.bitfire.dav4jvm.Logger
 import at.bitfire.dav4jvm.XmlPullParser
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.ktor.Response.HrefRelation
@@ -21,7 +23,6 @@ import io.ktor.http.URLBuilder
 import io.ktor.http.Url
 import io.ktor.http.isSuccess
 import io.ktor.http.takeFrom
-import io.ktor.util.logging.KtorSimpleLogger
 
 /**
  * Parses a `<response>` XML element of a multistatus response.
@@ -32,7 +33,8 @@ class ResponseParser(
     private val location: Url
 ) {
 
-    private val logger = KtorSimpleLogger("at.bitfire.dav4jvm.ResponseParser")
+    private val logger
+        get() = Logger.getLogger("at.bitfire.dav4jvm.ktor.ResponseParser")
 
     /**
      * Parses an XML response element and returns the [MultiStatusItem.Response] for it, or `null`
@@ -77,7 +79,7 @@ class ResponseParser(
         }
 
         if (hrefOrNull == null) {
-            logger.warn("Ignoring XML response element without valid href")
+            logger.warning("Ignoring XML response element without valid href")
             return null
         }
         var href: Url = hrefOrNull      // guaranteed to be not null
@@ -165,7 +167,7 @@ class ResponseParser(
         val urlBuilder = try {
             URLBuilder(location).takeFrom(sHref)
         } catch (e: Exception) {
-            logger.warn("Unresolvable <href> in <response>: $hrefString", e)
+            logger.log(Level.WARNING, "Unresolvable <href> in <response>: $hrefString", e)
             return null
         }
 
