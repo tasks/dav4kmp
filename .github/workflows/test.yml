@@ -11,8 +11,8 @@ jobs:
             target: jvm
             task: check
           - os: macos-latest
-            target: iosSimulatorArm64
-            task: iosSimulatorArm64Test
+            target: ios
+            task: iosSimulatorArm64Test iosArm64MainKlibrary
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7

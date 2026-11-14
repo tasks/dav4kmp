@@ -23,7 +23,7 @@ group = "org.tasks"
 val releaseVersion: String? = System.getenv("DAV4JVM_VERSION")
 if (releaseVersion != null)
     require(releaseVersion.isSemVer()) { "DAV4JVM_VERSION must be X.Y.Z or X.Y.Z-suffix, not \"$releaseVersion\"" }
-version = releaseVersion ?: "SNAPSHOT"
+version = releaseVersion ?: "1.0.0-SNAPSHOT"
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
