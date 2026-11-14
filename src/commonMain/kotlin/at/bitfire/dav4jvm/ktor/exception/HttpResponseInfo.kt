@@ -85,7 +85,7 @@ internal class HttpResponseInfo private constructor(
                     try {
                         val responseBody = responseBodyChannel ?: response.bodyAsChannel()
                         val charset = responseContentType.charset() ?: Charsets.UTF_8
-                        responseBody.readBuffer(MAX_EXCERPT_SIZE).readText(charset)
+                        responseBody.readBuffer(MAX_EXCERPT_SIZE.toLong()).readText(charset)
                     } catch (_: Exception) {
                         // response body not available anymore, probably already consumed
                         null
