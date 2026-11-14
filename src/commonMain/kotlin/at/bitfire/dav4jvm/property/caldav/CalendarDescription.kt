@@ -12,8 +12,8 @@ package at.bitfire.dav4jvm.property.caldav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.readText
-import nl.adaptivity.xmlutil.XmlReader
+import at.bitfire.dav4jvm.XmlPullParser
+import at.bitfire.dav4jvm.XmlReader
 
 data class CalendarDescription(
     val description: String?
@@ -23,9 +23,9 @@ data class CalendarDescription(
 
         override fun getName() = CalDAV.CalendarDescription
 
-        override fun create(parser: XmlReader) =
+        override fun create(parser: XmlPullParser) =
             // <!ELEMENT calendar-description (#PCDATA)>
-            CalendarDescription(parser.readText())
+            CalendarDescription(XmlReader(parser).readText())
 
     }
 

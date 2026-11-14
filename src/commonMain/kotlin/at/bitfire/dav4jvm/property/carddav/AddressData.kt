@@ -12,8 +12,8 @@ package at.bitfire.dav4jvm.property.carddav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.readText
-import nl.adaptivity.xmlutil.XmlReader
+import at.bitfire.dav4jvm.XmlPullParser
+import at.bitfire.dav4jvm.XmlReader
 
 data class AddressData(
     val card: String?
@@ -32,9 +32,9 @@ data class AddressData(
 
         override fun getName() = CardDAV.AddressData
 
-        override fun create(parser: XmlReader) =
+        override fun create(parser: XmlPullParser) =
             // <!ELEMENT address-data (#PCDATA)>
-            AddressData(parser.readText())
+            AddressData(XmlReader(parser).readText())
 
     }
 

@@ -12,8 +12,8 @@ package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.processTag
-import nl.adaptivity.xmlutil.XmlReader
+import at.bitfire.dav4jvm.XmlPullParser
+import at.bitfire.dav4jvm.XmlReader
 
 /**
  * Represents a [NS_WEBDAV_PUSH]`:subscription` property.
@@ -28,11 +28,11 @@ data class Subscription private constructor(
 
         override fun getName() = WebDAVPush.Subscription
 
-        override fun create(parser: XmlReader): Subscription {
+        override fun create(parser: XmlPullParser): Subscription {
             // currently we only support WebPushSubscription
             var webPushSubscription: WebPushSubscription? = null
 
-            parser.processTag(WebDAVPush.WebPushSubscription) {
+            XmlReader(parser).processTag(WebDAVPush.WebPushSubscription) {
                 webPushSubscription = WebPushSubscription.Factory.create(parser)
             }
 

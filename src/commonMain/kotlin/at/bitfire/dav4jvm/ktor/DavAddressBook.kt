@@ -10,6 +10,7 @@
 
 package at.bitfire.dav4jvm.ktor
 
+import at.bitfire.dav4jvm.StringWriter
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.property.carddav.AddressData
@@ -39,7 +40,7 @@ class DavAddressBook(
      *
      * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable; see [location])
      *
-     * @throws kotlinx.io.IOException on I/O error
+     * @throws java.io.IOException on I/O error
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error
      * @throws at.bitfire.dav4jvm.ktor.exception.DavException on WebDAV error
      */
@@ -49,12 +50,19 @@ class DavAddressBook(
                                          DAV:prop)?, filter, limit?)>
            <!ELEMENT filter (prop-filter*)>
         */
-        val body = XmlUtils.buildDocument(listOf("" to WebDAV.NS_WEBDAV, "CARD" to CardDAV.NS_CARDDAV), CardDAV.AddressbookQuery) {
+        val serializer = XmlUtils.newSerializer()
+        val writer = StringWriter()
+        serializer.setOutput(writer)
+        serializer.startDocument("UTF-8", null)
+        serializer.setPrefix("", WebDAV.NS_WEBDAV)
+        serializer.setPrefix("CARD", CardDAV.NS_CARDDAV)
+        serializer.insertTag(CardDAV.AddressbookQuery) {
             insertTag(WebDAV.Prop) {
                 insertTag(WebDAV.GetETag)
             }
             insertTag(CardDAV.Filter)
         }
+        serializer.endDocument()
 
         return multiStatusFlow {
             httpClient.prepareRequest(location) {
@@ -64,7 +72,7 @@ class DavAddressBook(
 
                 acceptXml()
                 contentType(MIME_XML_UTF8)
-                setBody(body)
+                setBody(writer.toString())
             }
         }
     }
@@ -80,7 +88,7 @@ class DavAddressBook(
      *
      * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable; see [location])
      *
-     * @throws kotlinx.io.IOException on I/O error
+     * @throws java.io.IOException on I/O error
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error
      * @throws at.bitfire.dav4jvm.ktor.exception.DavException on WebDAV error
      */
@@ -94,15 +102,21 @@ class DavAddressBook(
                                             DAV:prop)?,
                                             DAV:href+)>
         */
-        val body = XmlUtils.buildDocument(listOf("" to WebDAV.NS_WEBDAV, "CARD" to CardDAV.NS_CARDDAV), CardDAV.AddressbookMultiget) {
+        val serializer = XmlUtils.newSerializer()
+        val writer = StringWriter()
+        serializer.setOutput(writer)
+        serializer.startDocument("UTF-8", null)
+        serializer.setPrefix("", WebDAV.NS_WEBDAV)
+        serializer.setPrefix("CARD", CardDAV.NS_CARDDAV)
+        serializer.insertTag(CardDAV.AddressbookMultiget) {
             insertTag(WebDAV.Prop) {
                 insertTag(WebDAV.GetContentType)
                 insertTag(WebDAV.GetETag)
                 insertTag(CardDAV.AddressData) {
                     if (contentType != null)
-                        attribute(null, AddressData.CONTENT_TYPE, null, contentType)
+                        attribute(null, AddressData.CONTENT_TYPE, contentType)
                     if (version != null)
-                        attribute(null, AddressData.VERSION, null, version)
+                        attribute(null, AddressData.VERSION, version)
                 }
             }
             for (url in urls)
@@ -110,6 +124,7 @@ class DavAddressBook(
                     text(url.encodedPath)
                 }
         }
+        serializer.endDocument()
 
         return multiStatusFlow {
             httpClient.prepareRequest(location) {
@@ -119,7 +134,7 @@ class DavAddressBook(
 
                 acceptXml()
                 contentType(MIME_XML_UTF8)
-                setBody(body)
+                setBody(writer.toString())
             }
         }
     }

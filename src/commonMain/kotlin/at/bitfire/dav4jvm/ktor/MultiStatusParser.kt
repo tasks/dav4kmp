@@ -10,14 +10,13 @@
 
 package at.bitfire.dav4jvm.ktor
 
+import at.bitfire.dav4jvm.XmlPullParser
+import at.bitfire.dav4jvm.XmlReader
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.property.webdav.SyncToken
 import at.bitfire.dav4jvm.property.webdav.WebDAV
-import at.bitfire.dav4jvm.readText
 import io.ktor.http.Url
 import kotlinx.coroutines.flow.FlowCollector
-import nl.adaptivity.xmlutil.EventType
-import nl.adaptivity.xmlutil.XmlReader
 
 /**
  * Parses a WebDAV `<multistatus>` XML response.
@@ -28,20 +27,20 @@ class MultiStatusParser(
     private val location: Url
 ) {
 
-    suspend fun parseResponse(parser: XmlReader, collector: FlowCollector<MultiStatusItem>) {
+    suspend fun parseResponse(parser: XmlPullParser, collector: FlowCollector<MultiStatusItem>) {
         val responseParser = ResponseParser(location)
 
         // <!ELEMENT multistatus (response*, responsedescription?,
         //                        sync-token?) >
         val depth = parser.depth
         var eventType = parser.eventType
-        while (eventType != EventType.END_DOCUMENT && !(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
-            if (eventType == EventType.START_ELEMENT && parser.depth == depth + 1) {
+        while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
+            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                 val item = when (parser.propertyName()) {
                     WebDAV.Response ->
                         responseParser.parseResponse(parser)
                     WebDAV.SyncToken ->
-                        parser.readText()?.let { MultiStatusItem.ExtraProperty(SyncToken(it)) }
+                        XmlReader(parser).readText()?.let { MultiStatusItem.ExtraProperty(SyncToken(it)) }
                     else -> null
                 }
                 if (item != null)

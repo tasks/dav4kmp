@@ -10,9 +10,6 @@
 
 package at.bitfire.dav4jvm
 
-import nl.adaptivity.xmlutil.EventType
-import nl.adaptivity.xmlutil.XmlReader
-
 /**
  * Represents an XML precondition/postcondition error. Every error has a name, which is the XML element
  * name. Subclassed errors may have more specific information available.
@@ -27,14 +24,14 @@ data class Error(
 
     companion object {
 
-        fun parseError(parser: XmlReader): List<Error> {
+        fun parseError(parser: XmlPullParser): List<Error> {
             val names = mutableSetOf<Property.Name>()
 
             val depth = parser.depth
             var eventType = parser.eventType
-            while (eventType != EventType.END_DOCUMENT && !(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
-                if (eventType == EventType.START_ELEMENT && parser.depth == depth + 1)
-                    names += Property.Name(parser.namespaceURI, parser.localName)
+            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
+                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
+                    names += Property.Name(parser.namespace!!, parser.name!!)
                 eventType = parser.next()
             }
 

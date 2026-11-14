@@ -11,6 +11,9 @@
 package at.bitfire.dav4jvm.ktor.exception
 
 import at.bitfire.dav4jvm.Error
+import at.bitfire.dav4jvm.StringReader
+import at.bitfire.dav4jvm.XmlPullParser
+import at.bitfire.dav4jvm.XmlPullParserException
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.ktor.isText
@@ -20,14 +23,16 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.request
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.charset
 import io.ktor.http.content.OutgoingContent
 import io.ktor.http.content.TextContent
 import io.ktor.http.contentType
 import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.charsets.Charsets
+import io.ktor.utils.io.core.String
+import io.ktor.utils.io.core.readText
 import io.ktor.utils.io.readBuffer
-import kotlinx.io.readString
-import nl.adaptivity.xmlutil.EventType
-import nl.adaptivity.xmlutil.XmlException
+import kotlinx.io.EOFException
 import kotlin.math.min
 
 internal class HttpResponseInfo private constructor(
@@ -61,9 +66,12 @@ internal class HttpResponseInfo private constructor(
 
             } else if (requestContent is OutgoingContent.ByteArrayContent && requestContentType != null && requestContentType.isText()) {
                 val bytes = requestContent.bytes()
+                val excerptSize = min(bytes.size, MAX_EXCERPT_SIZE)
+                val truncated = bytes.copyOf(excerptSize)
+                val excerpt = String(truncated, charset = requestContentType.charset() ?: Charsets.UTF_8)
                 requestExcerptBuilder
                     .append("\n\n")
-                    .append(bytes.decodeToString(endIndex = min(bytes.size, MAX_EXCERPT_SIZE)))
+                    .append(excerpt)
 
             } else if (requestContentLength != null && requestContentLength > 0) {
                 // otherwise, at least indicate request body size
@@ -76,7 +84,8 @@ internal class HttpResponseInfo private constructor(
                 if (responseContentType != null && responseContentType.isText()) {
                     try {
                         val responseBody = responseBodyChannel ?: response.bodyAsChannel()
-                        responseBody.readBuffer(MAX_EXCERPT_SIZE).readString()
+                        val charset = responseContentType.charset() ?: Charsets.UTF_8
+                        responseBody.readBuffer(MAX_EXCERPT_SIZE).readText(charset)
                     } catch (_: Exception) {
                         // response body not available anymore, probably already consumed
                         null
@@ -101,16 +110,19 @@ internal class HttpResponseInfo private constructor(
 
         private fun extractErrors(xml: String): List<Error> {
             try {
-                val parser = XmlUtils.newReader(xml)
+                val parser = XmlUtils.newPullParser()
+                parser.setInput(StringReader(xml))
 
                 var eventType = parser.eventType
-                while (eventType != EventType.END_DOCUMENT) {
-                    if (eventType == EventType.START_ELEMENT && parser.depth == 1)
+                while (eventType != XmlPullParser.END_DOCUMENT) {
+                    if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
                         if (parser.propertyName() == WebDAV.Error)
                             return Error.parseError(parser)
                     eventType = parser.next()
                 }
-            } catch (_: XmlException) {
+            } catch (_: XmlPullParserException) {
+                // Couldn't parse XML, either invalid or maybe it wasn't even XML
+            } catch (_: EOFException) {
                 // Couldn't parse XML, either invalid or maybe it wasn't even XML
             }
 

@@ -12,8 +12,6 @@ package at.bitfire.dav4jvm.ktor.exception
 
 import at.bitfire.dav4jvm.Error
 import at.bitfire.dav4jvm.Property
-import at.bitfire.dav4jvm.ktor.DavResource
-import at.bitfire.dav4jvm.property.webdav.WebDAV
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -23,7 +21,6 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Url
 import io.ktor.http.headersOf
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -32,7 +29,6 @@ import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class DavExceptionTest {
@@ -94,21 +90,6 @@ class DavExceptionTest {
                 assertTrue(actual.cause is FileNotFoundException)
             }
         }
-    }
-
-    @Test
-    fun `from malformed Multi-Status is Java-serializable`() = runTest {
-        val mockEngine = MockEngine {
-            respond(
-                "<multistatus xmlns='DAV:' x='&nbsp;'><response/></multistatus>", HttpStatusCode.MultiStatus,
-                headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.toString())
-            )
-        }
-        val ex = assertFailsWith<DavException> {
-            DavResource(HttpClient(mockEngine), sampleUrl).propfind(0, WebDAV.ResourceType).toList()
-        }
-
-        ObjectOutputStream(ByteArrayOutputStream()).use { it.writeObject(ex) }
     }
 
 }

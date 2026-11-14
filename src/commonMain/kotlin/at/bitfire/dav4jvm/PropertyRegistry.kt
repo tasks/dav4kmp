@@ -51,8 +51,6 @@ import at.bitfire.dav4jvm.property.webdav.ResourceType
 import at.bitfire.dav4jvm.property.webdav.SupportedReportSet
 import at.bitfire.dav4jvm.property.webdav.SyncToken
 import io.ktor.util.logging.KtorSimpleLogger
-import nl.adaptivity.xmlutil.XmlException
-import nl.adaptivity.xmlutil.XmlReader
 
 object PropertyRegistry {
 
@@ -120,7 +118,7 @@ object PropertyRegistry {
      * @param factory property factory to be registered
      */
     fun register(factory: PropertyFactory) {
-        logger.debug("Registering ${factory::class.simpleName} for ${factory.getName()}")
+        logger.debug("Registering ${factory::class.qualifiedName} for ${factory.getName()}")
         factories[factory.getName()] = factory
     }
 
@@ -136,10 +134,10 @@ object PropertyRegistry {
         }
     }
 
-    fun create(name: Property.Name, parser: XmlReader) =
+    fun create(name: Property.Name, parser: XmlPullParser) =
         try {
             factories[name]?.create(parser)
-        } catch (e: XmlException) {
+        } catch (e: XmlPullParserException) {
             logger.warn("Couldn't parse $name", e)
             null
         }

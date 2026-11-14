@@ -12,9 +12,9 @@ package at.bitfire.dav4jvm.property.carddav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.readContentTypes
+import at.bitfire.dav4jvm.XmlPullParser
+import at.bitfire.dav4jvm.XmlReader
 import io.ktor.http.ContentType
-import nl.adaptivity.xmlutil.XmlReader
 
 class SupportedAddressData(
     val types: Set<String> = emptySet()
@@ -41,10 +41,10 @@ class SupportedAddressData(
 
         override fun getName() = CardDAV.SupportedAddressData
 
-        override fun create(parser: XmlReader): SupportedAddressData {
+        override fun create(parser: XmlPullParser): SupportedAddressData {
             val supportedTypes = mutableSetOf<String>()
 
-            parser.readContentTypes(CardDAV.AddressDataType, supportedTypes::add)
+            XmlReader(parser).readContentTypes(CardDAV.AddressDataType, supportedTypes::add)
 
             return SupportedAddressData(supportedTypes)
         }

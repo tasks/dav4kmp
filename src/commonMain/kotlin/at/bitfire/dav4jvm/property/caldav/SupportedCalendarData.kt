@@ -12,9 +12,9 @@ package at.bitfire.dav4jvm.property.caldav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.readContentTypes
+import at.bitfire.dav4jvm.XmlPullParser
+import at.bitfire.dav4jvm.XmlReader
 import io.ktor.http.ContentType
-import nl.adaptivity.xmlutil.XmlReader
 
 data class SupportedCalendarData(
     val types: Set<String> = emptySet()
@@ -36,10 +36,10 @@ data class SupportedCalendarData(
 
         override fun getName() = CalDAV.SupportedCalendarData
 
-        override fun create(parser: XmlReader): SupportedCalendarData {
+        override fun create(parser: XmlPullParser): SupportedCalendarData {
             val supportedTypes = mutableSetOf<String>()
 
-            parser.readContentTypes(CalDAV.CalendarData, supportedTypes::add)
+            XmlReader(parser).readContentTypes(CalDAV.CalendarData, supportedTypes::add)
 
             return SupportedCalendarData(supportedTypes)
         }

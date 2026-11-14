@@ -12,6 +12,7 @@ package at.bitfire.dav4jvm.ktor
 
 import at.bitfire.dav4jvm.Error
 import at.bitfire.dav4jvm.Property
+import at.bitfire.dav4jvm.StringReader
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.property.webdav.WebDAV
 import kotlin.test.Test
@@ -23,7 +24,8 @@ class ErrorTest {
 
     companion object {
         private fun parseError(xml: String): List<Error> {
-            val parser = XmlUtils.newReader("<error xmlns='DAV:'>$xml</error>")
+            val parser = XmlUtils.newPullParser()
+            parser.setInput(StringReader("<error xmlns='DAV:'>$xml</error>"))
             parser.nextTag()   // <error>
             return Error.parseError(parser)
         }

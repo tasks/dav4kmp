@@ -10,8 +10,8 @@
 
 package at.bitfire.dav4jvm.property.caldav
 
+import at.bitfire.dav4jvm.XmlPullParser
 import at.bitfire.dav4jvm.property.common.HrefListProperty
-import nl.adaptivity.xmlutil.XmlReader
 
 data class CalendarProxyReadFor(
     override val hrefs: List<String> = emptyList()
@@ -21,7 +21,7 @@ data class CalendarProxyReadFor(
 
         override fun getName() = CalDAV.CalendarProxyReadFor
 
-        override fun create(parser: XmlReader) = create(parser, ::CalendarProxyReadFor)
+        override fun create(parser: XmlPullParser) = create(parser, ::CalendarProxyReadFor)
 
     }
 

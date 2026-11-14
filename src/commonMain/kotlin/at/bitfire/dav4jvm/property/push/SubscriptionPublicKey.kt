@@ -12,8 +12,8 @@ package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.readText
-import nl.adaptivity.xmlutil.XmlReader
+import at.bitfire.dav4jvm.XmlPullParser
+import at.bitfire.dav4jvm.XmlReader
 
 /**
  * Represents a [NS_WEBDAV_PUSH]`:subscription-public-key` property.
@@ -29,10 +29,10 @@ data class SubscriptionPublicKey(
 
         override fun getName() = WebDAVPush.SubscriptionPublicKey
 
-        override fun create(parser: XmlReader): SubscriptionPublicKey {
+        override fun create(parser: XmlPullParser): SubscriptionPublicKey {
             return SubscriptionPublicKey(
                 type = parser.getAttributeValue(null, "type"),
-                key = parser.readText()
+                key = XmlReader(parser).readText()
             )
         }
 

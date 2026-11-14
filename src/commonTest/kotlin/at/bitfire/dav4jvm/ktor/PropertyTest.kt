@@ -11,10 +11,11 @@
 package at.bitfire.dav4jvm.ktor
 
 import at.bitfire.dav4jvm.Property
+import at.bitfire.dav4jvm.StringReader
+import at.bitfire.dav4jvm.XmlPullParser
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.property.webdav.DisplayName
 import at.bitfire.dav4jvm.property.webdav.GetETag
-import nl.adaptivity.xmlutil.EventType
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -22,7 +23,8 @@ class PropertyTest {
 
     companion object {
         private fun parseProperty(xml: String): List<Property> {
-            val parser = XmlUtils.newReader("<test>$xml</test>")
+            val parser = XmlUtils.newPullParser()
+            parser.setInput(StringReader("<test>$xml</test>"))
             parser.nextTag()    // move into <test>
             return Property.parse(parser)
         }
@@ -31,12 +33,13 @@ class PropertyTest {
 
     @Test
     fun testParse_emptyElement() {
-        val parser = XmlUtils.newReader("<test xmlns='DAV:'></test>")
+        val parser = XmlUtils.newPullParser()
+        parser.setInput(StringReader("<test xmlns='DAV:'></test>"))
         parser.nextTag()
         val result = Property.parse(parser)
         assertEquals(0, result.size)
-        assertEquals(EventType.END_ELEMENT, parser.eventType)
-        assertEquals("test", parser.localName)
+        assertEquals(XmlPullParser.END_TAG, parser.eventType)
+        assertEquals("test", parser.name)
     }
 
     @Test

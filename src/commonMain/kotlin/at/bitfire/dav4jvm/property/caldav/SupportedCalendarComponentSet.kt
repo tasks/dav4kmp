@@ -12,9 +12,8 @@ package at.bitfire.dav4jvm.property.caldav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
+import at.bitfire.dav4jvm.XmlPullParser
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import nl.adaptivity.xmlutil.EventType
-import nl.adaptivity.xmlutil.XmlReader
 
 data class SupportedCalendarComponentSet(
     val supportsEvents: Boolean,
@@ -27,7 +26,7 @@ data class SupportedCalendarComponentSet(
 
         override fun getName() = CalDAV.SupportedCalendarComponentSet
 
-        override fun create(parser: XmlReader): SupportedCalendarComponentSet {
+        override fun create(parser: XmlPullParser): SupportedCalendarComponentSet {
             /* <!ELEMENT supported-calendar-component-set (comp+)>
                <!ELEMENT comp ((allprop | prop*), (allcomp | comp*))>
                <!ATTLIST comp name CDATA #REQUIRED>
@@ -40,8 +39,8 @@ data class SupportedCalendarComponentSet(
 
             val depth = parser.depth
             var eventType = parser.eventType
-            while (eventType != EventType.END_DOCUMENT && !(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
-                if (eventType == EventType.START_ELEMENT && parser.depth == depth + 1) {
+            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
+                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
                         CalDAV.AllComp -> {
                             components = SupportedCalendarComponentSet(

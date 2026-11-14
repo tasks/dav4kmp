@@ -34,17 +34,20 @@ plugins {
 
 kotlin {
     jvm()
-    iosArm64()
-    iosSimulatorArm64()
+    listOf(iosArm64(), iosSimulatorArm64()).forEach { target ->
+        target.compilations.getByName("main").cinterops.create("libxml2")
+    }
 
     sourceSets {
         commonMain.dependencies {
             api(libs.kotlin.coroutines.core)
             api(libs.ktor.client.core)
-            api(libs.xmlutil.core)
 
             implementation(libs.ktor.client.auth)
             implementation(libs.ktor.client.encoding)
+        }
+        jvmMain.dependencies {
+            api(libs.xpp3)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))

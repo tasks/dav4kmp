@@ -10,9 +10,6 @@
 
 package at.bitfire.dav4jvm
 
-import nl.adaptivity.xmlutil.XmlException
-import nl.adaptivity.xmlutil.XmlReader
-
 interface PropertyFactory {
 
     /**
@@ -28,8 +25,8 @@ interface PropertyFactory {
      * Implementations shouldn't make assumptions on which sub-properties are available
      * or not and in doubt return an empty [Property].
      *
-     * @throws XmlException in case of parsing errors
+     * @throws XmlPullParserException in case of parsing errors
      */
-    fun create(parser: XmlReader): Property
+    fun create(parser: XmlPullParser): Property
 
 }

@@ -12,8 +12,8 @@ package at.bitfire.dav4jvm.property.webdav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.readText
-import nl.adaptivity.xmlutil.XmlReader
+import at.bitfire.dav4jvm.XmlPullParser
+import at.bitfire.dav4jvm.XmlReader
 
 data class CreationDate(
     var creationDate: String?
@@ -23,8 +23,8 @@ data class CreationDate(
 
         override fun getName() = WebDAV.CreationDate
 
-        override fun create(parser: XmlReader) =
-            CreationDate(parser.readText())
+        override fun create(parser: XmlPullParser) =
+            CreationDate(XmlReader(parser).readText())
 
     }
 

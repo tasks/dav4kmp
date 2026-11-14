@@ -12,8 +12,8 @@ package at.bitfire.dav4jvm.property.webdav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.readText
-import nl.adaptivity.xmlutil.XmlReader
+import at.bitfire.dav4jvm.XmlPullParser
+import at.bitfire.dav4jvm.XmlReader
 
 data class SyncToken(
     val token: String?
@@ -23,9 +23,9 @@ data class SyncToken(
 
         override fun getName() = WebDAV.SyncToken
 
-        override fun create(parser: XmlReader) =
+        override fun create(parser: XmlPullParser) =
             // <!ELEMENT sync-token #PCDATA>
-            SyncToken(parser.readText())
+            SyncToken(XmlReader(parser).readText())
 
     }
 

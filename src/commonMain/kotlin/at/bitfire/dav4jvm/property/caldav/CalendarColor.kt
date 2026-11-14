@@ -12,9 +12,9 @@ package at.bitfire.dav4jvm.property.caldav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.readText
+import at.bitfire.dav4jvm.XmlPullParser
+import at.bitfire.dav4jvm.XmlReader
 import io.ktor.util.logging.KtorSimpleLogger
-import nl.adaptivity.xmlutil.XmlReader
 
 data class CalendarColor(
     val color: Int?
@@ -49,8 +49,8 @@ data class CalendarColor(
 
         override fun getName() = CalDAV.CalendarColor
 
-        override fun create(parser: XmlReader): CalendarColor {
-            parser.readText()?.let {
+        override fun create(parser: XmlPullParser): CalendarColor {
+            XmlReader(parser).readText()?.let {
                 try {
                     return CalendarColor(parseARGBColor(it))
                 } catch (e: IllegalArgumentException) {

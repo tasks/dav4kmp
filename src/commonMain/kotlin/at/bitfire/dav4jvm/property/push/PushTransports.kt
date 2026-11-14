@@ -12,9 +12,8 @@ package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
+import at.bitfire.dav4jvm.XmlPullParser
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import nl.adaptivity.xmlutil.EventType
-import nl.adaptivity.xmlutil.XmlReader
 
 /**
  * Represents a [NS_WEBDAV_PUSH]`:push-transports` property.
@@ -32,12 +31,12 @@ class PushTransports private constructor(
 
         override fun getName() = WebDAVPush.Transports
 
-        override fun create(parser: XmlReader): PushTransports {
+        override fun create(parser: XmlPullParser): PushTransports {
             val transports = mutableListOf<PushTransport>()
             val depth = parser.depth
             var eventType = parser.eventType
-            while (eventType != EventType.END_DOCUMENT && !(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
-                if (eventType == EventType.START_ELEMENT && parser.depth == depth + 1) {
+            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
+                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
                         WebDAVPush.WebPush ->
                             transports += WebPush.Factory.create(parser)

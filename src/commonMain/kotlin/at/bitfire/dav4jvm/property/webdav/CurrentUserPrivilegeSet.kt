@@ -12,10 +12,9 @@ package at.bitfire.dav4jvm.property.webdav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
+import at.bitfire.dav4jvm.XmlPullParser
+import at.bitfire.dav4jvm.XmlReader
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import at.bitfire.dav4jvm.processTag
-import nl.adaptivity.xmlutil.EventType
-import nl.adaptivity.xmlutil.XmlReader
 
 data class CurrentUserPrivilegeSet(
     // not all privileges from RFC 3744 are implemented by now
@@ -31,16 +30,16 @@ data class CurrentUserPrivilegeSet(
 
         override fun getName() = WebDAV.CurrentUserPrivilegeSet
 
-        override fun create(parser: XmlReader): CurrentUserPrivilegeSet {
+        override fun create(parser: XmlPullParser): CurrentUserPrivilegeSet {
             // <!ELEMENT current-user-privilege-set (privilege*)>
             // <!ELEMENT privilege ANY>
             var privs = CurrentUserPrivilegeSet()
 
-            parser.processTag(WebDAV.Privilege) {
+            XmlReader(parser).processTag(WebDAV.Privilege) {
                 val depth = parser.depth
                 var eventType = parser.eventType
-                while (eventType != EventType.END_DOCUMENT && !(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
-                    if (eventType == EventType.START_ELEMENT && parser.depth == depth + 1)
+                while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
+                    if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
                         when (parser.propertyName()) {
                             WebDAV.Read ->
                                 privs = privs.copy(mayRead = true)

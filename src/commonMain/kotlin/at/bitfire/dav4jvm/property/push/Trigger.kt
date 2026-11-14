@@ -12,9 +12,8 @@ package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
+import at.bitfire.dav4jvm.XmlPullParser
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import nl.adaptivity.xmlutil.EventType
-import nl.adaptivity.xmlutil.XmlReader
 
 data class Trigger(
     val contentUpdate: ContentUpdate? = null,
@@ -25,13 +24,13 @@ data class Trigger(
 
         override fun getName() = WebDAVPush.Trigger
 
-        override fun create(parser: XmlReader): Trigger {
+        override fun create(parser: XmlPullParser): Trigger {
             var trigger = Trigger()
 
             val depth = parser.depth
             var eventType = parser.eventType
-            while (eventType != EventType.END_DOCUMENT && !(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
-                if (eventType == EventType.START_ELEMENT && parser.depth == depth + 1) {
+            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
+                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
                         WebDAVPush.ContentUpdate -> trigger = trigger.copy(
                             contentUpdate = ContentUpdate.Factory.create(parser)

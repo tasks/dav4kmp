@@ -10,8 +10,8 @@
 
 package at.bitfire.dav4jvm.property.carddav
 
+import at.bitfire.dav4jvm.XmlPullParser
 import at.bitfire.dav4jvm.property.common.HrefListProperty
-import nl.adaptivity.xmlutil.XmlReader
 
 class AddressbookHomeSet(
     override val hrefs: List<String> = emptyList()
@@ -21,7 +21,7 @@ class AddressbookHomeSet(
 
         override fun getName() = CardDAV.AddressbookHomeSet
 
-        override fun create(parser: XmlReader) = create(parser, ::AddressbookHomeSet)
+        override fun create(parser: XmlPullParser) = create(parser, ::AddressbookHomeSet)
 
     }
 

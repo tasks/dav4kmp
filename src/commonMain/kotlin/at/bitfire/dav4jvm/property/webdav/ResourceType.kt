@@ -12,10 +12,9 @@ package at.bitfire.dav4jvm.property.webdav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
+import at.bitfire.dav4jvm.XmlPullParser
 import at.bitfire.dav4jvm.property.caldav.CalDAV
 import at.bitfire.dav4jvm.property.carddav.CardDAV
-import nl.adaptivity.xmlutil.EventType
-import nl.adaptivity.xmlutil.XmlReader
 
 class ResourceType(
     val types: Set<Property.Name> = emptySet()
@@ -31,15 +30,15 @@ class ResourceType(
 
         override fun getName() = WebDAV.ResourceType
 
-        override fun create(parser: XmlReader): ResourceType {
+        override fun create(parser: XmlPullParser): ResourceType {
             val types = mutableSetOf<Property.Name>()
 
             val depth = parser.depth
             var eventType = parser.eventType
-            while (eventType != EventType.END_DOCUMENT && !(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
-                if (eventType == EventType.START_ELEMENT && parser.depth == depth + 1) {
+            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
+                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     // use static objects to allow types.contains()
-                    var typeName = Property.Name(parser.namespaceURI, parser.localName)
+                    var typeName = Property.Name(parser.namespace!!, parser.name!!)
                     when (typeName) {       // if equals(), replace by our instance
                         WebDAV.Collection -> typeName = WebDAV.Collection
                         WebDAV.Principal -> typeName = WebDAV.Principal

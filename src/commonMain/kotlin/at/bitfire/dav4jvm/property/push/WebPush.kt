@@ -12,9 +12,8 @@ package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
+import at.bitfire.dav4jvm.XmlPullParser
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import nl.adaptivity.xmlutil.EventType
-import nl.adaptivity.xmlutil.XmlReader
 
 /**
  * Represents a [NS_WEBDAV_PUSH]`:web-push` property.
@@ -29,12 +28,12 @@ data class WebPush(
 
         override fun getName(): Property.Name = WebDAVPush.WebPush
 
-        override fun create(parser: XmlReader): WebPush {
+        override fun create(parser: XmlPullParser): WebPush {
             var vapidPublicKey: VapidPublicKey? = null
             val depth = parser.depth
             var eventType = parser.eventType
-            while (eventType != EventType.END_DOCUMENT && !(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
-                if (eventType == EventType.START_ELEMENT) {
+            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
+                if (eventType == XmlPullParser.START_TAG) {
                     when (parser.propertyName()) {
                         WebDAVPush.VapidPublicKey -> vapidPublicKey = VapidPublicKey.Factory.create(parser)
                     }

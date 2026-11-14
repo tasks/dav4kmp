@@ -1,0 +1,6 @@
+package = at.bitfire.dav4jvm.libxml2
+headers = libxml/xmlreader.h
+headerFilter = libxml/*
+nonStrictEnums = xmlReaderTypes xmlParserOption
+compilerOpts = -I=/usr/include/libxml2
+linkerOpts = -lxml2

@@ -15,164 +15,164 @@ import at.bitfire.dav4jvm.property.caldav.SupportedCalendarData.Companion.CONTEN
 import at.bitfire.dav4jvm.property.caldav.SupportedCalendarData.Companion.VERSION
 import io.ktor.http.ContentType
 import io.ktor.util.logging.KtorSimpleLogger
-import io.ktor.util.logging.Logger
-import nl.adaptivity.xmlutil.EventType
-import nl.adaptivity.xmlutil.XmlException
-import nl.adaptivity.xmlutil.XmlReader
+import kotlinx.io.IOException
 import kotlin.time.Instant
 
-private val logger: Logger = KtorSimpleLogger("at.bitfire.dav4jvm.XmlReader")
-
-private val EventType.isText: Boolean
-    get() = this == EventType.TEXT || this == EventType.CDSECT || this == EventType.ENTITY_REF || this == EventType.IGNORABLE_WHITESPACE
-
-internal fun XmlReader.nextText(): String = buildString {
-    while (next() != EventType.END_ELEMENT)
-        when {
-            eventType.isText -> append(text)
-            eventType == EventType.COMMENT || eventType == EventType.PROCESSING_INSTRUCTION -> {}
-            else -> throw XmlException("Expected text content or end tag, found: $eventType")
-        }
-}
-
 /**
- * Reads child elements of the current element. Whenever a direct child with the given name is found,
- * [processor] is called for each one.
+ * Reads/processes XML tags which are used for WebDAV.
+ *
+ * @param parser The parser to read from.
  */
-fun XmlReader.processTag(name: Property.Name, processor: XmlReader.() -> Unit) {
-    val startDepth = depth
-    var eventType = eventType
-    while (eventType != EventType.END_DOCUMENT && !(eventType == EventType.END_ELEMENT && depth == startDepth)) {
-        if (eventType == EventType.START_ELEMENT && depth == startDepth + 1 && propertyName() == name)
-            processor()
-        eventType = next()
-    }
-}
+class XmlReader(
+    private val parser: XmlPullParser
+) {
 
-/**
- * Reads the inline text of the current element.
- *
- * For instance, if the parser is at the beginning of this XML:
- *
- * ```
- * <tag>text</tag>
- * ```
- *
- * this function will return "text".
- *
- * @return text or `null` if no text is found
- */
-fun XmlReader.readText(): String? {
-    var last: String? = null
-    var current: StringBuilder? = null
+    // base processing
 
-    val startDepth = depth
-    var eventType = eventType
-    while (eventType != EventType.END_DOCUMENT && !(eventType == EventType.END_ELEMENT && depth == startDepth)) {
-        if (eventType.isText && depth == startDepth)
-            current = (current ?: StringBuilder()).append(text)
-        else if (eventType == EventType.START_ELEMENT && depth == startDepth + 1) {
-            current?.let { last = it.toString() }
-            current = null
-        }
-        eventType = next()
-    }
-
-    return current?.toString() ?: last
-}
-
-/**
- * Reads child elements of the current element. When a direct child with the given name is found,
- * its text is returned.
- *
- * @param name The name of the tag to read.
- * @return The text inside the tag, or `null` if the tag is not found.
- */
-fun XmlReader.readTextProperty(name: Property.Name): String? {
-    var result: String? = null
-
-    val startDepth = depth
-    var eventType = eventType
-    while (eventType != EventType.END_DOCUMENT && !(eventType == EventType.END_ELEMENT && depth == startDepth)) {
-        if (eventType == EventType.START_ELEMENT && depth == startDepth + 1 && propertyName() == name && result == null)
-            result = nextText()
-        eventType = next()
-    }
-    return result
-}
-
-/**
- * Reads child elements of the current element. Whenever a direct child with the given name is
- * found, its text is added to the given list.
- *
- * @param name The name of the tag to read.
- * @param list The list to add the text to.
- */
-fun XmlReader.readTextPropertyList(name: Property.Name, list: MutableCollection<String>) {
-    val startDepth = depth
-    var eventType = eventType
-    while (eventType != EventType.END_DOCUMENT && !(eventType == EventType.END_ELEMENT && depth == startDepth)) {
-        if (eventType == EventType.START_ELEMENT && depth == startDepth + 1 && propertyName() == name)
-            list.add(nextText())
-        eventType = next()
-    }
-}
-
-
-/**
- * Uses [readText] to read the tag's value (which is expected to be in _HTTP-date_ format), and converts
- * it into an [Instant] using [HttpUtils.parseDate].
- *
- * If the conversion fails for any reason, null is returned, and a message is displayed in log.
- */
-fun XmlReader.readHttpDate(): Instant? {
-    return readText()?.let { rawDate ->
-        val date = HttpUtils.parseDate(rawDate)
-        if (date != null)
-            date
-        else {
-            logger.warn("Couldn't parse HTTP-date")
-            null
+    /**
+     * Reads child elements of the current element. Whenever a direct child with the given name is found,
+     * [processor] is called for each one.
+     */
+    @Throws(IOException::class, XmlPullParserException::class)
+    fun processTag(name: Property.Name, processor: XmlReader.() -> Unit) {
+        val depth = parser.depth
+        var eventType = parser.eventType
+        while (!((eventType == XmlPullParser.END_TAG || eventType == XmlPullParser.END_DOCUMENT) && parser.depth == depth)) {
+            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 && parser.propertyName() == name)
+                processor()
+            eventType = parser.next()
         }
     }
-}
 
-/**
- * Uses [readText] to read the tag's value (which is expected to be a number), and converts it
- * into a [Long] with [String.toLong].
- *
- * If the conversion fails for any reason, null is returned, and a message is displayed in log.
- */
-fun XmlReader.readLong(): Long? {
-    return readText()?.let { valueStr ->
-        try {
-            valueStr.toLong()
-        } catch(e: NumberFormatException) {
-            logger.warn("Couldn't parse as Long: $valueStr", e)
-            null
+    /**
+     * Reads the inline text of the current element.
+     *
+     * For instance, if the parser is at the beginning of this XML:
+     *
+     * ```
+     * <tag>text</tag>
+     * ```
+     *
+     * this function will return "text".
+     *
+     * @return text or `null` if no text is found
+     */
+    @Throws(IOException::class, XmlPullParserException::class)
+    fun readText(): String? {
+        var text: String? = null
+
+        val depth = parser.depth
+        var eventType = parser.eventType
+        while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
+            if (eventType == XmlPullParser.TEXT && parser.depth == depth)
+                text = parser.text
+            eventType = parser.next()
+        }
+
+        return text
+    }
+
+    /**
+     * Reads child elements of the current element. When a direct child with the given name is found,
+     * its text is returned.
+     *
+     * @param name The name of the tag to read.
+     * @return The text inside the tag, or `null` if the tag is not found.
+     */
+    @Throws(IOException::class, XmlPullParserException::class)
+    fun readTextProperty(name: Property.Name): String? {
+        var result: String? = null
+
+        val depth = parser.depth
+        var eventType = parser.eventType
+        while (!((eventType == XmlPullParser.END_TAG || eventType == XmlPullParser.END_DOCUMENT) && parser.depth == depth)) {
+            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 && parser.propertyName() == name && result == null)
+                result = parser.nextText()
+            eventType = parser.next()
+        }
+        return result
+    }
+
+    /**
+     * Reads child elements of the current element. Whenever a direct child with the given name is
+     * found, its text is added to the given list.
+     *
+     * @param name The name of the tag to read.
+     * @param list The list to add the text to.
+     */
+    @Throws(IOException::class, XmlPullParserException::class)
+    fun readTextPropertyList(name: Property.Name, list: MutableCollection<String>) {
+        val depth = parser.depth
+        var eventType = parser.eventType
+        while (!((eventType == XmlPullParser.END_TAG || eventType == XmlPullParser.END_DOCUMENT) && parser.depth == depth)) {
+            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 && parser.propertyName() == name)
+                list.add(parser.nextText())
+            eventType = parser.next()
         }
     }
-}
 
-/**
- * Processes all the tags named [tagName], and sends every tag that has the [CONTENT_TYPE]
- * attribute with [onNewType].
- *
- * @param tagName The name of the tag that contains the [CONTENT_TYPE] attribute value.
- * @param onNewType Called every time a new [ContentType] is found.
- */
-fun XmlReader.readContentTypes(tagName: Property.Name, onNewType: (String) -> Unit) {
-    try {
-        processTag(tagName) {
-            getAttributeValue(null, CONTENT_TYPE)?.let { contentType ->
-                var type = contentType
-                getAttributeValue(null, VERSION)?.let { version -> type += "; version=$version" }
-                try {
-                    onNewType(ContentType.parse(type).toString())
-                } catch (_: Exception) { }
+
+    // extended processing (uses readText etc.)
+
+    /**
+     * Uses [readText] to read the tag's value (which is expected to be in _HTTP-date_ format), and converts
+     * it into an [Instant] using [HttpUtils.parseDate].
+     *
+     * If the conversion fails for any reason, null is returned, and a message is displayed in log.
+     */
+    fun readHttpDate(): Instant? {
+        return readText()?.let { rawDate ->
+            val date = HttpUtils.parseDate(rawDate)
+            if (date != null)
+                date
+            else {
+                val logger = KtorSimpleLogger("at.bitfire.dav4jvm.XmlReader")
+                logger.warn("Couldn't parse HTTP-date")
+                null
             }
         }
-    } catch(e: XmlException) {
-        logger.error("Couldn't parse content types", e)
     }
+
+    /**
+     * Uses [readText] to read the tag's value (which is expected to be a number), and converts it
+     * into a [Long] with [String.toLong].
+     *
+     * If the conversion fails for any reason, null is returned, and a message is displayed in log.
+     */
+    fun readLong(): Long? {
+        return readText()?.let { valueStr ->
+            try {
+                valueStr.toLong()
+            } catch(e: NumberFormatException) {
+                val logger = KtorSimpleLogger("at.bitfire.dav4jvm.XmlReader")
+                logger.warn("Couldn't parse as Long: $valueStr", e)
+                null
+            }
+        }
+    }
+
+    /**
+     * Processes all the tags named [tagName], and sends every tag that has the [CONTENT_TYPE]
+     * attribute with [onNewType].
+     *
+     * @param tagName The name of the tag that contains the [CONTENT_TYPE] attribute value.
+     * @param onNewType Called every time a new [ContentType] is found.
+     */
+    fun readContentTypes(tagName: Property.Name, onNewType: (String) -> Unit) {
+        try {
+            processTag(tagName) {
+                parser.getAttributeValue(null, CONTENT_TYPE)?.let { contentType ->
+                    var type = contentType
+                    parser.getAttributeValue(null, VERSION)?.let { version -> type += "; version=$version" }
+                    try {
+                        onNewType(ContentType.parse(type).toString())
+                    } catch (_: Exception) { }
+                }
+            }
+        } catch(e: XmlPullParserException) {
+            val logger = KtorSimpleLogger("at.bitfire.dav4jvm.XmlReader")
+            logger.error("Couldn't parse content types", e)
+        }
+    }
+
 }

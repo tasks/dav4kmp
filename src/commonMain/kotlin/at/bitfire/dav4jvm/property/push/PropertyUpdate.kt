@@ -12,11 +12,10 @@ package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
+import at.bitfire.dav4jvm.XmlPullParser
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.property.webdav.Depth
 import at.bitfire.dav4jvm.property.webdav.WebDAV
-import nl.adaptivity.xmlutil.EventType
-import nl.adaptivity.xmlutil.XmlReader
 
 /**
  * Represents a [NS_WEBDAV_PUSH]`:property-update` property.
@@ -31,13 +30,13 @@ data class PropertyUpdate(
 
         override fun getName() = WebDAVPush.PropertyUpdate
 
-        override fun create(parser: XmlReader): PropertyUpdate {
+        override fun create(parser: XmlPullParser): PropertyUpdate {
             var propertyUpdate = PropertyUpdate()
 
             val depth = parser.depth
             var eventType = parser.eventType
-            while (eventType != EventType.END_DOCUMENT && !(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
-                if (eventType == EventType.START_ELEMENT && parser.depth == depth + 1) {
+            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
+                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
                         WebDAV.Depth -> propertyUpdate = propertyUpdate.copy(
                             depth = Depth.Factory.create(parser)

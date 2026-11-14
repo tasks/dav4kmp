@@ -12,9 +12,8 @@ package at.bitfire.dav4jvm.property.webdav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.processTag
-import nl.adaptivity.xmlutil.EventType
-import nl.adaptivity.xmlutil.XmlReader
+import at.bitfire.dav4jvm.XmlPullParser
+import at.bitfire.dav4jvm.XmlReader
 
 data class SupportedReportSet(
     val reports: Set<Property.Name> = emptySet()
@@ -24,7 +23,7 @@ data class SupportedReportSet(
 
         override fun getName() = WebDAV.SupportedReportSet
 
-        override fun create(parser: XmlReader): SupportedReportSet {
+        override fun create(parser: XmlPullParser): SupportedReportSet {
             /* <!ELEMENT supported-report-set (supported-report*)>
                <!ELEMENT supported-report report>
                <!ELEMENT report ANY>
@@ -32,11 +31,11 @@ data class SupportedReportSet(
 
             val reports = mutableSetOf<Property.Name>()
 
-            parser.processTag(WebDAV.SupportedReport) {
+            XmlReader(parser).processTag(WebDAV.SupportedReport) {
                 processTag(WebDAV.Report) {
                     parser.nextTag()
-                    if (parser.eventType == EventType.START_ELEMENT)
-                        reports += Property.Name(parser.namespaceURI, parser.localName)
+                    if (parser.eventType == XmlPullParser.START_TAG)
+                        reports += Property.Name(parser.namespace!!, parser.name!!)
                 }
             }
             return SupportedReportSet(reports)

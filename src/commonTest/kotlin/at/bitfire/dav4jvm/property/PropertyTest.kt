@@ -11,6 +11,7 @@
 package at.bitfire.dav4jvm.property
 
 import at.bitfire.dav4jvm.Property
+import at.bitfire.dav4jvm.StringReader
 import at.bitfire.dav4jvm.XmlUtils
 
 open class PropertyTest {
@@ -18,7 +19,8 @@ open class PropertyTest {
     companion object {
 
         fun parseProperty(s: String): List<Property> {
-            val parser = XmlUtils.newReader("<test>$s</test>")
+            val parser = XmlUtils.newPullParser()
+            parser.setInput(StringReader("<test>$s</test>"))
             parser.nextTag()    // move into <test>
             return Property.parse(parser)
         }

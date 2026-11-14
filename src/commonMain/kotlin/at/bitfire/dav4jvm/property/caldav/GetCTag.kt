@@ -12,8 +12,8 @@ package at.bitfire.dav4jvm.property.caldav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.readText
-import nl.adaptivity.xmlutil.XmlReader
+import at.bitfire.dav4jvm.XmlPullParser
+import at.bitfire.dav4jvm.XmlReader
 
 data class GetCTag(
     val cTag: String?
@@ -23,7 +23,7 @@ data class GetCTag(
 
         override fun getName() = CalDAV.GetCTag
 
-        override fun create(parser: XmlReader) = GetCTag(parser.readText())
+        override fun create(parser: XmlPullParser) = GetCTag(XmlReader(parser).readText())
 
     }
 }

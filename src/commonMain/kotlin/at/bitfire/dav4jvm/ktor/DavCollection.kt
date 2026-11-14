@@ -11,6 +11,7 @@
 package at.bitfire.dav4jvm.ktor
 
 import at.bitfire.dav4jvm.Property
+import at.bitfire.dav4jvm.StringWriter
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.property.webdav.WebDAV
@@ -49,7 +50,7 @@ open class DavCollection @JvmOverloads constructor(
      *
      * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable; see [location])
      *
-     * @throws kotlinx.io.IOException on I/O error
+     * @throws java.io.IOException on I/O error
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error
      * @throws at.bitfire.dav4jvm.ktor.exception.DavException on WebDAV error
      */
@@ -69,7 +70,12 @@ open class DavCollection @JvmOverloads constructor(
 
            <!-- DAV:prop defined in RFC 4918, Section 14.18 -->
         */
-        val body = XmlUtils.buildDocument(listOf("" to WebDAV.NS_WEBDAV), WebDAV.SyncCollection) {
+        val serializer = XmlUtils.newSerializer()
+        val writer = StringWriter()
+        serializer.setOutput(writer)
+        serializer.startDocument("UTF-8", null)
+        serializer.setPrefix("", WebDAV.NS_WEBDAV)
+        serializer.insertTag(WebDAV.SyncCollection) {
             insertTag(WebDAV.SyncToken) {
                 if (syncToken != null)
                     text(syncToken)
@@ -88,6 +94,7 @@ open class DavCollection @JvmOverloads constructor(
                     insertTag(prop)
             }
         }
+        serializer.endDocument()
 
         return multiStatusFlow {
             httpClient.prepareRequest(location) {
@@ -97,7 +104,7 @@ open class DavCollection @JvmOverloads constructor(
 
                 acceptXml()
                 contentType(MIME_XML_UTF8)
-                setBody(body)
+                setBody(writer.toString())
             }
         }
     }

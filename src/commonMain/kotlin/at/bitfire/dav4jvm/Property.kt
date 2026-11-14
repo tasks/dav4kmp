@@ -11,8 +11,6 @@
 package at.bitfire.dav4jvm
 
 import io.ktor.util.logging.KtorSimpleLogger
-import nl.adaptivity.xmlutil.EventType
-import nl.adaptivity.xmlutil.XmlReader
 
 /**
  * Represents a WebDAV property.
@@ -36,7 +34,7 @@ interface Property {
 
     companion object {
 
-        fun parse(parser: XmlReader): List<Property> {
+        fun parse(parser: XmlPullParser): List<Property> {
             val logger = KtorSimpleLogger("at.bitfire.dav4jvm.Property")
 
             // <!ELEMENT prop ANY >
@@ -44,9 +42,9 @@ interface Property {
             val properties = ArrayList<Property>()
 
             var eventType = parser.eventType
-            while (eventType != EventType.END_DOCUMENT && !(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
-                if (eventType == EventType.START_ELEMENT && parser.depth == depth + 1) {
-                    val name = Name(parser.namespaceURI, parser.localName)
+            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
+                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
+                    val name = Name(parser.namespace!!, parser.name!!)
 
                     try {
                         val property = PropertyRegistry.create(name, parser)

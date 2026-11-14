@@ -12,9 +12,8 @@ package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
+import at.bitfire.dav4jvm.XmlPullParser
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import nl.adaptivity.xmlutil.EventType
-import nl.adaptivity.xmlutil.XmlReader
 
 /**
  * Represents a [NS_WEBDAV_PUSH]`:web-push-subscription` property.
@@ -32,13 +31,13 @@ data class WebPushSubscription(
 
         override fun getName() = WebDAVPush.WebPushSubscription
 
-        override fun create(parser: XmlReader): WebPushSubscription {
+        override fun create(parser: XmlPullParser): WebPushSubscription {
             var subscription = WebPushSubscription()
 
             val depth = parser.depth
             var eventType = parser.eventType
-            while (eventType != EventType.END_DOCUMENT && !(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
-                if (eventType == EventType.START_ELEMENT && parser.depth == depth + 1) {
+            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
+                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
                         WebDAVPush.ContentEncoding ->
                             subscription = subscription.copy(contentEncoding = ContentEncoding.Factory.create(parser))

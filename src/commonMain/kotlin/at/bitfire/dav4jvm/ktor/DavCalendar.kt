@@ -11,6 +11,7 @@
 package at.bitfire.dav4jvm.ktor
 
 import at.bitfire.dav4jvm.Property
+import at.bitfire.dav4jvm.StringWriter
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.property.caldav.CalDAV
@@ -48,7 +49,7 @@ class DavCalendar(
      *
      * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable; see [location])
      *
-     * @throws kotlinx.io.IOException on I/O error
+     * @throws java.io.IOException on I/O error
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error
      * @throws at.bitfire.dav4jvm.ktor.exception.DavException on WebDAV error
      */
@@ -69,28 +70,35 @@ class DavCalendar(
                        type (e.g., VEVENT)
 
         */
-        val body = XmlUtils.buildDocument(listOf("" to WebDAV.NS_WEBDAV, "CAL" to CalDAV.NS_CALDAV), CalDAV.CalendarQuery) {
+        val serializer = XmlUtils.newSerializer()
+        val writer = StringWriter()
+        serializer.setOutput(writer)
+        serializer.startDocument("UTF-8", null)
+        serializer.setPrefix("", WebDAV.NS_WEBDAV)
+        serializer.setPrefix("CAL", CalDAV.NS_CALDAV)
+        serializer.insertTag(CalDAV.CalendarQuery) {
             insertTag(WebDAV.Prop) {
                 for (prop in props)
                     insertTag(prop)
             }
             insertTag(CalDAV.Filter) {
                 insertTag(CalDAV.CompFilter) {
-                    attribute(null, COMP_FILTER_NAME, null, "VCALENDAR")
+                    attribute(null, COMP_FILTER_NAME, "VCALENDAR")
                     insertTag(CalDAV.CompFilter) {
-                        attribute(null, COMP_FILTER_NAME, null, component)
+                        attribute(null, COMP_FILTER_NAME, component)
                         if (start != null || end != null) {
                             insertTag(CalDAV.TimeRange) {
                                 if (start != null)
-                                    attribute(null, TIME_RANGE_START, null, formatUtc(start))
+                                    attribute(null, TIME_RANGE_START, formatUtc(start))
                                 if (end != null)
-                                    attribute(null, TIME_RANGE_END, null, formatUtc(end))
+                                    attribute(null, TIME_RANGE_END, formatUtc(end))
                             }
                         }
                     }
                 }
             }
         }
+        serializer.endDocument()
 
         return multiStatusFlow {
             httpClient.prepareRequest(location) {
@@ -100,7 +108,7 @@ class DavCalendar(
 
                 acceptXml()
                 contentType(MIME_XML_UTF8)
-                setBody(body)
+                setBody(writer.toString())
             }
         }
     }
@@ -116,7 +124,7 @@ class DavCalendar(
      *
      * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable; see [location])
      *
-     * @throws kotlinx.io.IOException on I/O error
+     * @throws java.io.IOException on I/O error
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error
      * @throws at.bitfire.dav4jvm.ktor.exception.DavException on WebDAV error
      */
@@ -129,23 +137,30 @@ class DavCalendar(
                                         DAV:propname |
                                         DAV:prop)?, DAV:href+)>
         */
-        val body = XmlUtils.buildDocument(listOf("" to WebDAV.NS_WEBDAV, "CAL" to CalDAV.NS_CALDAV), CalDAV.CalendarMultiget) {
+        val serializer = XmlUtils.newSerializer()
+        val writer = StringWriter()
+        serializer.setOutput(writer)
+        serializer.startDocument("UTF-8", null)
+        serializer.setPrefix("", WebDAV.NS_WEBDAV)
+        serializer.setPrefix("CAL", CalDAV.NS_CALDAV)
+        serializer.insertTag(CalDAV.CalendarMultiget) {
             insertTag(WebDAV.Prop) {
                 insertTag(WebDAV.GetContentType)     // to determine the character set
                 insertTag(WebDAV.GetETag)
                 insertTag(CalDAV.ScheduleTag)
                 insertTag(CalDAV.CalendarData) {
                     if (contentType != null)
-                        attribute(null, CalendarData.CONTENT_TYPE, null, contentType)
+                        attribute(null, CalendarData.CONTENT_TYPE, contentType)
                     if (version != null)
-                        attribute(null, CalendarData.VERSION, null, version)
+                        attribute(null, CalendarData.VERSION, version)
                 }
             }
             for (url in urls)
                 insertTag(WebDAV.Href) {
-                    text(url.encodedPath)
+                    serializer.text(url.encodedPath)
                 }
         }
+        serializer.endDocument()
 
         return multiStatusFlow {
             httpClient.prepareRequest(location) {
@@ -153,7 +168,7 @@ class DavCalendar(
 
                 acceptXml()
                 contentType(MIME_XML_UTF8)
-                setBody(body)
+                setBody(writer.toString())
             }
         }
     }

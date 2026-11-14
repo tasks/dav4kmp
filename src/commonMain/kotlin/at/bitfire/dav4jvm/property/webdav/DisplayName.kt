@@ -12,8 +12,8 @@ package at.bitfire.dav4jvm.property.webdav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.readText
-import nl.adaptivity.xmlutil.XmlReader
+import at.bitfire.dav4jvm.XmlPullParser
+import at.bitfire.dav4jvm.XmlReader
 
 data class DisplayName(
     val displayName: String?
@@ -23,9 +23,9 @@ data class DisplayName(
 
         override fun getName() = WebDAV.DisplayName
 
-        override fun create(parser: XmlReader) =
+        override fun create(parser: XmlPullParser) =
             // <!ELEMENT displayname (#PCDATA) >
-            DisplayName(parser.readText())
+            DisplayName(XmlReader(parser).readText())
 
     }
 

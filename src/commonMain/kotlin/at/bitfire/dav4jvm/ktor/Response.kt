@@ -80,9 +80,6 @@ data class Response(
     operator fun<T: Property> get(clazz: KClass<T>) =
             properties.firstOrNull { clazz.isInstance(it) } as T?
 
-    inline fun <reified T: Property> get() =
-            properties.filterIsInstance<T>().firstOrNull()
-
     /**
      * Returns whether the request was successful.
      *
