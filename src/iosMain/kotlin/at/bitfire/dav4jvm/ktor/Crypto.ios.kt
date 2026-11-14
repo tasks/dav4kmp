@@ -21,7 +21,7 @@ import platform.CoreCrypto.CC_SHA256_DIGEST_LENGTH
 import platform.posix.arc4random_buf
 
 @OptIn(ExperimentalForeignApi::class)
-internal actual fun md5(data: ByteArray): ByteArray {
+internal fun md5(data: ByteArray): ByteArray {
     val digest = UByteArray(CC_MD5_DIGEST_LENGTH)
     val input = if (data.isEmpty()) ByteArray(1) else data
     input.usePinned { pinned ->
@@ -34,7 +34,7 @@ internal actual fun md5(data: ByteArray): ByteArray {
 }
 
 @OptIn(ExperimentalForeignApi::class)
-internal actual fun sha256(data: ByteArray): ByteArray {
+internal fun sha256(data: ByteArray): ByteArray {
     val digest = UByteArray(CC_SHA256_DIGEST_LENGTH)
     val input = if (data.isEmpty()) ByteArray(1) else data
     input.usePinned { pinned ->
@@ -46,7 +46,7 @@ internal actual fun sha256(data: ByteArray): ByteArray {
 }
 
 @OptIn(ExperimentalForeignApi::class)
-internal actual fun secureRandomBytes(size: Int): ByteArray {
+internal fun secureRandomBytes(size: Int): ByteArray {
     val bytes = ByteArray(size)
     if (size > 0)
         bytes.usePinned { pinned ->

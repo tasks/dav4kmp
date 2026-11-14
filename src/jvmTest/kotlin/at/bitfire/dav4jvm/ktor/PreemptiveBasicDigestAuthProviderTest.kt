@@ -17,14 +17,14 @@ import io.ktor.http.auth.HttpAuthHeader
 import io.ktor.http.auth.parseAuthorizationHeader
 import io.ktor.http.encodedPath
 import kotlinx.coroutines.test.runTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
 
 class PreemptiveBasicDigestAuthProviderTest {
 
     @Test
-    fun `sendWithoutRequest is true before any challenge`() {
+    fun `sendWithoutRequest() is true before any challenge`() {
         val authProvider = PreemptiveBasicDigestAuthProvider(
             username = "user",
             password = "password"
@@ -38,7 +38,7 @@ class PreemptiveBasicDigestAuthProviderTest {
     }
 
     @Test
-    fun `sendWithoutRequest stays true after Digest challenge`() {
+    fun `sendWithoutRequest() stays true after Digest challenge`() {
         val authProvider = PreemptiveBasicDigestAuthProvider(
             username = "user",
             password = "password"
@@ -55,7 +55,7 @@ class PreemptiveBasicDigestAuthProviderTest {
     }
 
     @Test
-    fun `addRequestHeaders sends Basic before any challenge`() = runTest {
+    fun `addRequestHeaders() sends Basic before any challenge`() = runTest {
         val authProvider = PreemptiveBasicDigestAuthProvider(
             username = "user",
             password = "password"
@@ -71,13 +71,16 @@ class PreemptiveBasicDigestAuthProviderTest {
     }
 
     @Test
-    fun `addRequestHeaders replaces stale Authorization header with Digest after Digest challenge`() = runTest {
+    fun `addRequestHeaders() replaces stale Authorization header with Digest after Digest challenge`() = runTest {
         // https://github.com/bitfireAT/davx5-ose/issues/2632
         val authProvider = PreemptiveBasicDigestAuthProvider(
             username = "user",
             password = "password"
         )
         val authHeader = parseAuthorizationHeader("""Digest algorithm=MD5, realm="realm", nonce="md5-nonce"""")!!
+
+        // Note: isApplicable() needs to be called before addRequestHeaders()
+        assertTrue(authProvider.isApplicable(authHeader))
 
         // simulates ktor's Auth plugin copying the original request's headers (including a
         // preemptively-set Basic header) into the retried request before calling addRequestHeaders()
@@ -95,10 +98,10 @@ class PreemptiveBasicDigestAuthProviderTest {
     }
 
     @Test
-    fun `addRequestHeaders derives scheme from authHeader instead of a concurrently-changed preemptive scheme`() =
+    fun `addRequestHeaders() derives scheme from authHeader instead of a concurrently-changed preemptive scheme`() =
         runTest {
             // simulates two concurrent requests on the same provider instance: this request's own
-            // challenge is Digest, but a concurrent request's retry flips the shared
+            // challenge is Digest, but a concurrent request's isApplicable() call flips the shared
             // preemptive-scheme state to Basic in between. The retry must still use Digest, since
             // that's what this response actually challenged for.
             val authProvider = PreemptiveBasicDigestAuthProvider(
@@ -109,10 +112,10 @@ class PreemptiveBasicDigestAuthProviderTest {
                 parseAuthorizationHeader("""Digest algorithm=MD5, realm="realm", nonce="md5-nonce"""")!!
             assertTrue(authProvider.isApplicable(digestAuthHeader))
 
-            // a concurrent request's own 401 handling retries with a Basic challenge,
+            // a concurrent request's own 401 handling runs isApplicable() with a Basic challenge,
             // flipping the shared preemptive-scheme state
             val basicAuthHeader = parseAuthorizationHeader("""Basic realm="realm"""")!!
-            authProvider.addRequestHeaders(HttpRequestBuilder(), basicAuthHeader)
+            assertTrue(authProvider.isApplicable(basicAuthHeader))
 
             // this request's own retry, using its own (Digest) authHeader captured before the race
             val request = HttpRequestBuilder().apply {
@@ -126,14 +129,13 @@ class PreemptiveBasicDigestAuthProviderTest {
         }
 
     @Test
-    fun `addRequestHeaders sends Digest preemptively on next request after Digest challenge`() = runTest {
+    fun `addRequestHeaders() sends Digest preemptively on next request after Digest challenge`() = runTest {
         val authProvider = PreemptiveBasicDigestAuthProvider(
             username = "user",
             password = "password"
         )
         val authHeader = parseAuthorizationHeader("""Digest algorithm=MD5, realm="realm", nonce="md5-nonce"""")!!
-        assertTrue(authProvider.isApplicable(authHeader))
-        authProvider.addRequestHeaders(HttpRequestBuilder(), authHeader)
+        authProvider.isApplicable(authHeader)
 
         // a brand-new request, with no prior Authorization header and no fresh challenge
         val request = HttpRequestBuilder().apply {
@@ -152,7 +154,7 @@ class PreemptiveBasicDigestAuthProviderTest {
     }
 
     @Test
-    fun `addRequestHeaders authenticates for slash when the URL has no path`() = runTest {
+    fun `addRequestHeaders() authenticates for slash when the URL has no path`() = runTest {
         val authProvider = PreemptiveBasicDigestAuthProvider(
             username = "user",
             password = "password"
@@ -175,7 +177,8 @@ class PreemptiveBasicDigestAuthProviderTest {
     }
 
     @Test
-    fun `addRequestHeaders leaves the URL untouched for Basic`() = runTest {
+    fun `addRequestHeaders() leaves the URL untouched for Basic`() = runTest {
+        // the empty-path normalization is a workaround for a ktor Digest bug, so it must not affect Basic requests
         val authProvider = PreemptiveBasicDigestAuthProvider(
             username = "user",
             password = "password"
