@@ -10,9 +10,7 @@
 package at.bitfire.dav4jvm
 
 import io.ktor.utils.io.ByteReadChannel
-import io.ktor.utils.io.asSource
-import kotlinx.io.asInputStream
-import kotlinx.io.buffered
+import io.ktor.utils.io.jvm.javaio.toInputStream as ktorToInputStream
 import org.xmlpull.v1.XmlPullParserFactory
 
 actual typealias XmlPullParserException = org.xmlpull.v1.XmlPullParserException
@@ -28,7 +26,7 @@ actual typealias StringWriter = java.io.StringWriter
 actual typealias InputStream = java.io.InputStream
 
 actual fun ByteReadChannel.toInputStream(): InputStream =
-    asSource().buffered().asInputStream()
+    ktorToInputStream()
 
 
 /**
