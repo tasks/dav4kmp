@@ -11,6 +11,7 @@ package at.bitfire.dav4jvm
 
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.asSource
+import kotlinx.io.IOException
 import kotlinx.io.Source
 import kotlinx.io.buffered
 
@@ -60,7 +61,11 @@ internal class SourceInputStream(
     private val source: Source
 ) : InputStream() {
     override fun read(buffer: ByteArray, offset: Int, length: Int) =
-        source.readAtMostTo(buffer, offset, offset + length)
+        try {
+            source.readAtMostTo(buffer, offset, offset + length)
+        } catch (_: IOException) {
+            -1
+        }
 
     override fun close() = source.close()
 }

@@ -62,7 +62,7 @@ private val libXmlInitialized: Unit by lazy {
  * consecutive text, CDATA sections and resolved references are reported as a single [XmlPullParser.TEXT]
  * event; comments, processing instructions and whitespace outside of the root element are skipped.
  *
- * Document type declarations are rejected; network access is disabled.
+ * Document type declarations are skipped; network access is disabled.
  */
 @OptIn(ExperimentalForeignApi::class, ExperimentalNativeApi::class)
 internal class LibXmlPullParser : XmlPullParser {
@@ -264,10 +264,7 @@ internal class LibXmlPullParser : XmlPullParser {
                 XML_READER_TYPE_WHITESPACE.toInt(),
                 XML_READER_TYPE_SIGNIFICANT_WHITESPACE.toInt() ->
                     return Node(XmlPullParser.TEXT, nodeDepth, text = xmlTextReaderConstValue(reader).toKStringOrEmpty())
-                XML_READER_TYPE_DOCUMENT_TYPE.toInt() -> {
-                    handle.free()
-                    throw XmlPullParserException("Document type declarations are not supported")
-                }
+                XML_READER_TYPE_DOCUMENT_TYPE.toInt() -> {}
             }
         }
     }
