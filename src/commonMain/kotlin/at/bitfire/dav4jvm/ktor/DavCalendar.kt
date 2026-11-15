@@ -28,7 +28,6 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.Url
 import io.ktor.http.contentType
-import io.ktor.util.date.GMTDate
 import kotlinx.coroutines.flow.Flow
 import kotlin.time.Instant
 
@@ -191,13 +190,6 @@ class DavCalendar(
         const val COMP_FILTER_NAME = "name"
         const val TIME_RANGE_START = "start"
         const val TIME_RANGE_END = "end"
-
-        internal fun formatUtc(instant: Instant): String {
-            val date = GMTDate(instant.toEpochMilliseconds())
-            fun Int.pad(length: Int) = toString().padStart(length, '0')
-            return date.year.pad(4) + (date.month.ordinal + 1).pad(2) + date.dayOfMonth.pad(2) +
-                    "T" + date.hours.pad(2) + date.minutes.pad(2) + date.seconds.pad(2) + "Z"
-        }
 
     }
 
