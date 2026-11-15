@@ -56,12 +56,11 @@ import io.ktor.http.withCharset
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.charsets.Charsets
 import io.ktor.utils.io.peek
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.io.EOFException
 import kotlinx.io.IOException
 import kotlinx.io.bytestring.encodeToByteString
@@ -774,11 +773,12 @@ open class DavResource(
     /**
      * Executes a request and processes the response as a flow of multi-status items. Follows redirects.
      *
-     * The request and the (thread-blocking) parsing run on [Dispatchers.IO],
-     * regardless of where the flow is collected – so it's safe to collect it on the main thread.
+     * The (thread-blocking) parsing runs on the collecting thread – collect this flow on a
+     * dispatcher meant for blocking work, like `Dispatchers.IO`.
+     *
      * (It's a [channelFlow] and not a plain `flow {}` because on Native – and on the JVM from Ktor 4 on –
      * `HttpStatement.execute {}` runs its block on the engine's dispatcher, and a plain flow doesn't
-     * allow emitting from there unless that happens to be [Dispatchers.IO] as well.)
+     * allow emitting from there.)
      *
      * @param prepareRequest A suspending function that prepares and returns an HttpStatement for the request.
      * @return A Flow emitting MultiStatusItem objects from the response.
@@ -791,7 +791,7 @@ open class DavResource(
         followRedirects(prepareRequest) { response ->
             processMultiStatus(response) { send(it) }
         }
-    }.flowOn(Dispatchers.IO)
+    }.buffer(Channel.RENDEZVOUS)
 
 
     // request building

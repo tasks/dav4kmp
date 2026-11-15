@@ -43,6 +43,7 @@ import io.ktor.http.headersOf
 import io.ktor.http.withCharset
 import io.ktor.utils.io.charsets.Charsets
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
@@ -992,6 +993,24 @@ class DavResourceTest {
                 headersOf(HttpHeaders.ContentType, ContentType.Text.Xml.toString())
             )
         )
+    }
+
+    @Test
+    fun `propfind keeps the responses parsed before the body ends mid-document`() = runTest {
+        val body = (1..5).joinToString(
+            separator = "",
+            prefix = "<multistatus xmlns='DAV:'>"
+        ) { "<response><href>/dav/$it</href><status>HTTP/1.1 200 OK</status></response>" }
+
+        val hrefs = mutableListOf<String>()
+        try {
+            davResource(propfindEngine(body)).propfind(0, WebDAV.ResourceType).responses().collect {
+                hrefs += it.href.fullPath
+            }
+        } catch (_: DavException) {
+        }
+
+        assertEquals((1..5).map { "/dav/$it" }, hrefs)
     }
 
     private fun displayNameMultiStatus(displayName: String) =
