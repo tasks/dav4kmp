@@ -13,6 +13,7 @@ package at.bitfire.dav4jvm.property.webdav
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlPullParser
+import at.bitfire.dav4jvm.davAssert
 import at.bitfire.dav4jvm.property.caldav.CalDAV
 import at.bitfire.dav4jvm.property.carddav.CardDAV
 
@@ -52,6 +53,7 @@ class ResourceType(
                 }
                 eventType = parser.next()
             }
+            davAssert(parser.depth == depth)
 
             return ResourceType(types)
         }

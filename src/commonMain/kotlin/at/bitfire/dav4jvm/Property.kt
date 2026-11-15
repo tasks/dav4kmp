@@ -43,10 +43,12 @@ interface Property {
             var eventType = parser.eventType
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
+                    val depthBeforeParsing = parser.depth
                     val name = Name(parser.namespace!!, parser.name!!)
 
                     try {
                         val property = PropertyRegistry.create(name, parser)
+                        davAssert(parser.depth == depthBeforeParsing)
 
                         if (property != null) {
                             properties.add(property)
